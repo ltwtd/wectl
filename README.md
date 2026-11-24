@@ -11,12 +11,12 @@
 
 **Zero-Bloat, Portable C++20 Modular Wallpaper Engine Client & Web Gallery for Hyprland**
 
-[![Language](https://shields.io)](https://isocpp.org)
-[![Target](https://shields.io)](https://hyprland.org)
-[![Binary Size](https://shields.io)](#architecture)
-[![Idle GPU](https://shields.io)](#features)
-[![Release](https://shields.io)](https://github.comtag/v-0.1)
-[![Assets](https://shields.io)](https://github.comtag/assets-v.0.1)
+[![Language](https://shields.ioC%2B%2B-20-00599C?style=for-the-badge&logo=cplusplus)](https://isocpp.org)
+[![Target](https://shields.ioWayland-Hyprland-58E1FF?style=for-the-badge&logo=wayland)](https://hyprland.org)
+[![Binary Size](https://shields.ioBinary-~100_KB-00FF64?style=for-the-badge)](#architecture)
+[![Idle GPU](https://shields.ioIdle_GPU-0%25-FF0033?style=for-the-badge)](#features)
+[![Release](https://shields.ioRelease-v--0.1-780019?style=for-the-badge)](https://github.com/ltwtd/wectl/releases/tag/v-0.1)
+[![Assets](https://shields.ioAssets-v--0.1-140005?style=for-the-badge)](https://github.com/ltwtd/wectl/releases/tag/assets-v.0.1)
 
 </div>
 
@@ -39,25 +39,25 @@ All installers run silently with **zero prompts**, auto-install missing system p
 ### 1. Native C++20 Compilation Launcher *(Recommended — CPU Optimized)*
 Compiles all 7 C++20 modules natively on your CPU (`-march=native -flto`) into `~/wectl`:
 ```bash
-curl -fL https://github.comdownload/v-0.1/wectl-launcher-compile -o /tmp/wectl-setup && chmod +x /tmp/wectl-setup && /tmp/wectl-setup
+curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-launcher-compile -o /tmp/wectl-setup && chmod +x /tmp/wectl-setup && /tmp/wectl-setup
 ```
 
 ### 2. Prebuilt Binary Launcher *(Instant Deployment)*
 Deploys the precompiled `x86_64` binary + dependencies into `~/wectl`:
 ```bash
-curl -fL https://github.comdownload/v-0.1/wectl-launcher-prebuilt -o /tmp/wectl-setup && chmod +x /tmp/wectl-setup && /tmp/wectl-setup
+curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-launcher-prebuilt -o /tmp/wectl-setup && chmod +x /tmp/wectl-setup && /tmp/wectl-setup
 ```
 
 ### 3. Manual Build (`git clone`)
 ```bash
-git clone https://github.com.git && cd wectl/src/v-0.1/v-0.1_git && make clean-install
+git clone https://github.com/ltwtd/wectl.git && cd wectl/src/v-0.1/v-0.1_git && make clean-install
 ```
 
 ---
 
 ## Dependencies & Asset Bundle (`assets-v.0.1`)
 
-Pre-verified packages and binaries hosted in [`assets-v.0.1`](https://github.comtag/assets-v.0.1) (automatically resolved and installed only if missing):
+Pre-verified packages and binaries hosted in [`assets-v.0.1`](https://github.com/ltwtd/wectl/releases/tag/assets-v.0.1) (automatically resolved and installed only if missing):
 
 | Component / Package | Version / Build | Role |
 | :--- | :--- | :--- |
