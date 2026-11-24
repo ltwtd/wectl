@@ -1,0 +1,2 @@
+*.cppm linguist-language=C++
+web/* linguist-vendored
