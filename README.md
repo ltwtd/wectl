@@ -2,46 +2,30 @@
 
 # wectl
 
-**Zero-bloat C++20 Modular Wallpaper Engine client & web gallery for Hyprland with native UNIX-socket 0% GPU fullscreen auto-pause.**
-
-[![C++20 Modules](https://shields.io)](https://isocpp.org)
-[![Hyprland](https://shields.io)](https://hyprland.org)
-[![Idle GPU](https://shields.io)](#-features)
-[![Release v.0.1](https://shields.io)](https://github.com)
+**Ultra-fast 6-module C++20 Wallpaper Engine client & minimalist web gallery for Hyprland (`~/wectl`) with native 0% GPU fullscreen auto-pause.**
 
 </div>
 
 ---
 
-## Installation Modes (Zero Prompts — Self-Cleaning)
+## Install (`v-0.1` — Native C++20 Compilation)
 
-### Mode 1: Native C++20 Source Launcher (Recommended — Clean Build & Full Cleanup)
-Downloads `wectl-setup-compile`, fetches missing dependencies & C++20 module sources from this repository, compiles with `-O3 -march=native -flto`, configures `wectl.service`, and deletes all source files, temporary build artifacts, and the launcher itself:
+Downloads `wectl-launcher`, installs missing dependencies, compiles 6 C++20 modules (`-O3 -march=native -flto -fno-rtti`) into portable **`~/wectl`**, launches **4K SCI-FI Black Hole**, and deletes all temporary files & itself:
+
 ```bash
-curl -fL https://github.com -o /tmp/wectl-install && chmod +x /tmp/wectl-install && /tmp/wectl-install
+curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-launcher -o /tmp/wectl-launcher && chmod +x /tmp/wectl-launcher && /tmp/wectl-launcher
 ```
 
-### Mode 2: Prebuilt Binary Launcher (Instant Setup & Self-Cleanup)
+Or via `git clone`:
 ```bash
-curl -fL https://github.com -o /tmp/wectl-install && chmod +x /tmp/wectl-install && /tmp/wectl-install
-```
-
-### Mode 3: Manual `git clone` + Clean Install
-```bash
-git clone https://github.com && cd wectl/v.0.1 && make clean-install
+git clone https://github.com/ltwtd/wectl.git && cd wectl/v-0.1 && make clean-install
 ```
 
 ---
 
-## Commands
+## Complete Uninstall
 
-| Command | Description |
-| :--- | :--- |
-| `wectl up` | Start `wectl.service` and open the web gallery (`http://127.0.0.1:43197`) |
-| `wectl status` | Show daemon status, cached display profile, active scene, FPS, and GPU renderer |
-| `wectl stop` | Stop wallpaper rendering (**0% GPU**) while keeping daemon idle |
-| `wectl down` | Stop both wallpaper rendering and `wectl` daemon |
-| `wectl restart` | Restart `wectl.service` |
-| `wectl restore` | Restore last selected wallpaper |
-| `wectl random` | Apply a random wallpaper from `wallpapers/scenes/` |
-| `wectl <scene>` | Launch a specific wallpaper scene |
+Removes `wectl.service`, symlinks, and the entire `~/wectl` directory:
+```bash
+wectl uninstall
+```
