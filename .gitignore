@@ -1,3 +1,5 @@
-*.pkg.tar.zst
-*.tar.*
-*.zip
+assets-v.0.1/
+v-0.1/.build/
+v-0.1/gcm.cache/
+v-0.1/wectl
+v-0.1/wectl-launcher
