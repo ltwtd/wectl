@@ -27,7 +27,7 @@
 Fetches the interactive setup binary, detects your C++20 toolchain (`clang++` / `g++`), and compiles natively with `-O3 -march=native`.
 
 ```bash
-curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-launcher-prebuilt -o /tmp/wectl-setup && chmod +x /tmp/wectl-setup && /tmp/wectl-setup
+curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-launcher-compile -o /tmp/wectl-setup && chmod +x /tmp/wectl-setup && /tmp/wectl-setup
 ```
 
 ```text
