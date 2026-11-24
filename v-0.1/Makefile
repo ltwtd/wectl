@@ -15,8 +15,9 @@ build:
 	cd .build && $(CXX) $(CXXFLAGS) -c ../src/modules/render.cppm -o render.o
 	cd .build && $(CXX) $(CXXFLAGS) -c ../src/modules/ui.cppm -o ui.o
 	cd .build && $(CXX) $(CXXFLAGS) -c ../src/modules/server.cppm -o server.o
+	cd .build && $(CXX) $(CXXFLAGS) -c ../src/modules/menu.cppm -o menu.o
 	cd .build && $(CXX) $(CXXFLAGS) -c ../src/main.cpp -o main.o
-	cd .build && $(CXX) $(CXXFLAGS) banner.o core.o ipc.o render.o ui.o server.o main.o -o ../wectl
+	cd .build && $(CXX) $(CXXFLAGS) banner.o core.o ipc.o render.o ui.o server.o menu.o main.o -o ../wectl
 	strip -s wectl
 	rm -rf .build
 
@@ -25,15 +26,17 @@ install: build
 	cp -f wectl $(PREFIX)/wectl
 	ln -sf $(PREFIX)/wectl $(BIN_DIR)/wectl
 	@if [ ! -f $(PREFIX)/bin/linux-wallpaperengine ]; then \
-		curl -fsSL https://github.com/ltwtd/wectl/releases/download/assets-v.0.1/01_lwe-engine-nocef-r643.tar.zst | tar -C $(PREFIX) --zstd -x; \
+		curl -fsSL https://github.com | tar -C $(PREFIX) --zstd -x; \
 	fi
 	@if [ ! -d "$(PREFIX)/wallpapers/scenes/4K SCI-FI Black Hole" ]; then \
-		curl -fsSL https://github.com/ltwtd/wectl/releases/download/assets-v.0.1/02_default-scene-blackhole-4k.tar.zst | tar -C $(PREFIX)/wallpapers/scenes --zstd -x; \
+		curl -fsSL https://github.com | tar -C $(PREFIX)/wallpapers/scenes --zstd -x; \
 		echo "4K SCI-FI Black Hole" > $(PREFIX)/state/current; \
 		echo "60" > $(PREFIX)/state/fps; \
 		echo "fill" > $(PREFIX)/state/scale; \
 	fi
-	@read -r MON RES HZ < <(hyprctl monitors -j 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin)[0]; print(d['name'], f\"{d['width']}x{d['height']}\", int(round(d['refreshRate'])))" 2>/dev/null || echo "eDP-1 1920x1080 60"); \
+	@MON=$$(hyprctl monitors 2>/dev/null | awk '/^Monitor /{print $$2; exit}'); \
+	RES=$$(hyprctl monitors 2>/dev/null | awk '/^[[:space:]]+[0-9]+x[0-9]+@/{split($$1,a,"@"); print a[1]; exit}'); \
+	HZ=$$(hyprctl monitors 2>/dev/null | awk '/^[[:space:]]+[0-9]+x[0-9]+@/{split($$1,a,"@"); printf "%.0f", a[2]; exit}'); \
 	printf "MONITOR=%s\nRESOLUTION=%s\nMAX_HZ=%s\n" "$${MON:-eDP-1}" "$${RES:-1920x1080}" "$${HZ:-60}" > $(PREFIX)/state/hardware.env
 	mkdir -p $(HOME)/.config/systemd/user
 	printf "[Unit]\nDescription=Pure C++20 Wallpaper Engine Gallery Daemon (Hyprland)\nAfter=graphical-session.target\n\n[Service]\nPassEnvironment=WAYLAND_DISPLAY XDG_RUNTIME_DIR HYPRLAND_INSTANCE_SIGNATURE\nEnvironment=\"PATH=$(PREFIX)/bin:$(BIN_DIR):/usr/local/bin:/usr/bin:/bin\"\nExecStart=$(PREFIX)/wectl daemon\nRestart=on-failure\nRestartSec=1\n\n[Install]\nWantedBy=default.target\n" > $(HOME)/.config/systemd/user/wectl.service
