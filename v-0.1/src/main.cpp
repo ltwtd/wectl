@@ -22,6 +22,8 @@ int main(int argc, char** argv) {
         return 0;
     }
 
+    ensure_linked();
+
     if (cmd == "-h" || cmd == "--help" || cmd == "help") {
         run_interactive_hub();
         return 0;
@@ -49,6 +51,8 @@ int main(int argc, char** argv) {
     } else if (cmd == "restore") {
         const std::string cur = read_file(state_dir() / "current", "4K SCI-FI Black Hole");
         if (!cur.empty()) launch_wallpaper(cur);
+    } else if (cmd == "relink") {
+        relocate_self(true);
     } else if (cmd == "uninstall") {
         run_uninstall();
     } else {
