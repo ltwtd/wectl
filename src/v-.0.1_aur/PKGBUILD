@@ -24,7 +24,7 @@ makedepends=(
 )
 provides=('wectl')
 conflicts=('wectl')
-source=("${pkgname}::git+https://github.com")
+source=("${pkgname}::git+https://github.com/ltwtd/wectl.git")
 sha256sums=('SKIP')
 
 pkgver() {
