@@ -1,0 +1,45 @@
+# Maintainer: ltwtd <твой_email@example.com>
+pkgname=wectl-git
+pkgver=0.1.r1.g0000000
+pkgrel=1
+pkgdesc="Pure C++20 modular Wallpaper Engine gallery daemon and TUI/CLI for Hyprland"
+arch=('x86_64')
+url="https://github.com"
+license=('MIT')
+depends=(
+    'glibc'
+    'gcc-libs'
+    'hyprland'
+    'linux-wallpaperengine-git'
+    'procps-ng'
+    'psmisc'
+    'xdg-utils'
+)
+makedepends=(
+    'git'
+    'gcc'
+)
+provides=('wectl')
+conflicts=('wectl')
+source=("${pkgname}::git+${url}.git")
+sha256sums=('SKIP')
+
+pkgver() {
+    cd "$srcdir/$pkgname"
+    git describe --long --tags --abbrev=7 2>/dev/null | sed 's/^v-//;s/^v//;s/\([^-]*-g\)/r\1/;s/-/./g' ||
+    printf "0.1.r%s.g%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+}
+
+build() {
+    cd "$srcdir/$pkgname"
+    make build
+}
+
+package() {
+    cd "$srcdir/$pkgname"
+    make DESTDIR="$pkgdir" PREFIX=/usr install
+    if [ -f LICENSE ]; then
+        install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    fi
+}
+
