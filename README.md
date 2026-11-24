@@ -50,7 +50,7 @@ curl -fL https://github.com/releases/download/v-0.1/wectl-launcher-prebuilt -o /
 
 ### 3. Manual Build (`git clone`)
 ```bash
-git clone https://github.com.git && cd wectl/v-0.1 && make clean-install
+git clone https://github.com.git && cd wectl/src/v-0.1 && make clean-install
 ```
 
 ---

@@ -233,14 +233,14 @@ int main(int argc, char** argv) {
         const std::string out_bin = (target_dir / "wectl").string();
         const std::string cmd =
             "cd " + sh_quote(bdir.string()) + " && "
-            "g++ " + flags + " -c src/modules/banner.cppm -o banner.o && "
-            "g++ " + flags + " -c src/modules/core.cppm -o core.o && "
-            "g++ " + flags + " -c src/modules/ipc.cppm -o ipc.o && "
-            "g++ " + flags + " -c src/modules/render.cppm -o render.o && "
-            "g++ " + flags + " -c src/modules/ui.cppm -o ui.o && "
-            "g++ " + flags + " -c src/modules/server.cppm -o server.o && "
-            "g++ " + flags + " -c src/modules/menu.cppm -o menu.o && "
-            "g++ " + flags + " -c src/main.cpp -o main.o && "
+            "g++ " + flags + " -c modules/banner.cppm -o banner.o && "
+            "g++ " + flags + " -c modules/core.cppm -o core.o && "
+            "g++ " + flags + " -c modules/ipc.cppm -o ipc.o && "
+            "g++ " + flags + " -c modules/render.cppm -o render.o && "
+            "g++ " + flags + " -c modules/ui.cppm -o ui.o && "
+            "g++ " + flags + " -c modules/server.cppm -o server.o && "
+            "g++ " + flags + " -c modules/menu.cppm -o menu.o && "
+            "g++ " + flags + " -c main.cpp -o main.o && "
             "g++ " + flags + " banner.o core.o ipc.o render.o ui.o server.o menu.o main.o -o " + sh_quote(out_bin) + " && "
             "strip -s " + sh_quote(out_bin);
 
