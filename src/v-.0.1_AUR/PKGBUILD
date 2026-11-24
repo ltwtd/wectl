@@ -1,4 +1,4 @@
-# Maintainer: ltwtd <твой_email@example.com>
+# Maintainer: ltwtd <ltwtd.dev@yandex.ru>
 pkgname=wectl-git
 pkgver=0.1.r1.g0000000
 pkgrel=1
@@ -10,14 +10,17 @@ depends=(
     'glibc'
     'gcc-libs'
     'hyprland'
-    'linux-wallpaperengine-git'
     'procps-ng'
     'psmisc'
     'xdg-utils'
 )
+optdepends=(
+    'linux-wallpaperengine-git: backend required for animated Steam Workshop scenes'
+)
 makedepends=(
     'git'
     'gcc'
+    'make'
 )
 provides=('wectl')
 conflicts=('wectl')
@@ -31,15 +34,14 @@ pkgver() {
 }
 
 build() {
-    cd "$srcdir/$pkgname"
-    make build
+    cd "$srcdir/$pkgname/src/v-.0.1_AUR"
+    CXXFLAGS="${CXXFLAGS} -O3 -flto" make build
 }
 
 package() {
-    cd "$srcdir/$pkgname"
+    cd "$srcdir/$pkgname/src/v-.0.1_AUR"
     make DESTDIR="$pkgdir" PREFIX=/usr install
-    if [ -f LICENSE ]; then
-        install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    if [ -f "$srcdir/$pkgname/LICENSE" ]; then
+        install -Dm644 "$srcdir/$pkgname/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
     fi
 }
-
