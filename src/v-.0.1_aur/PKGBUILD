@@ -34,12 +34,12 @@ pkgver() {
 }
 
 build() {
-    cd "$srcdir/$pkgname/src/v-.0.1_AUR"
+    cd "$srcdir/$pkgname/src/v-.0.1_aur"
     CXXFLAGS="${CXXFLAGS} -O3 -flto" make build
 }
 
 package() {
-    cd "$srcdir/$pkgname/src/v-.0.1_AUR"
+    cd "$srcdir/$pkgname/src/v-.0.1_aur"
     make DESTDIR="$pkgdir" PREFIX=/usr install
     if [ -f "$srcdir/$pkgname/LICENSE" ]; then
         install -Dm644 "$srcdir/$pkgname/LICENSE" "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
