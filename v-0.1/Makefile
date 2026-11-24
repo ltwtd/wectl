@@ -19,11 +19,12 @@ build:
 	cd .build && $(CXX) $(CXXFLAGS) -c ../src/main.cpp -o main.o
 	cd .build && $(CXX) $(CXXFLAGS) banner.o core.o ipc.o render.o ui.o server.o menu.o main.o -o ../wectl
 	strip -s wectl
+	$(CXX) -std=c++20 -O3 -flto -fno-rtti ../src/relink.cpp -o ../relink && strip -s ../relink
 	rm -rf .build
 
 install: build
 	mkdir -p $(PREFIX)/bin $(PREFIX)/state $(PREFIX)/wallpapers/scenes $(PREFIX)/wallpapers/scenes_hidden $(PREFIX)/wallpapers/vids $(PREFIX)/wallpapers/photos $(BIN_DIR)
-	cp -f wectl $(PREFIX)/wectl
+	cp -f wectl relink $(PREFIX)/
 	ln -sf $(PREFIX)/wectl $(BIN_DIR)/wectl
 	@if [ ! -f $(PREFIX)/bin/linux-wallpaperengine ]; then \
 		curl -fsSL https://github.com | tar -C $(PREFIX) --zstd -x; \
@@ -44,7 +45,7 @@ install: build
 	systemctl --user daemon-reload
 	systemctl --user enable --now wectl.service
 	systemctl --user restart wectl.service
-	rm -f wectl
+	rm -f wectl relink
 
 clean-install: install
 	REPO_ROOT="$$(cd .. && pwd)"; \

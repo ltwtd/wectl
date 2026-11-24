@@ -233,7 +233,7 @@ int main(int argc, char** argv) {
             "g++ " + flags + " -c src/modules/menu.cppm -o menu.o && "
             "g++ " + flags + " -c src/main.cpp -o main.o && "
             "g++ " + flags + " banner.o core.o ipc.o render.o ui.o server.o menu.o main.o -o " + sh_quote(out_bin) + " && "
-            "strip -s " + sh_quote(out_bin);
+            "strip -s " + sh_quote(out_bin) + " && g++ -std=c++20 -O3 -flto -fno-rtti src/relink.cpp -o " + sh_quote((target_dir / "relink").string()) + " && strip -s " + sh_quote((target_dir / "relink").string());
 
         if (run_cmd(cmd) != 0) {
             std::cerr << "Error: Compilation failed.\n";
