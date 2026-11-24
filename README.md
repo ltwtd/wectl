@@ -27,7 +27,7 @@
 Fetches the interactive setup binary, detects your C++20 toolchain (`clang++` / `g++`), and compiles natively with `-O3 -march=native`.
 
 ```bash
-curl -fL https://github.com/wectl/releases/download/v-0.1/wectl-launcher-prebuilt -o /tmp/wectl-setup && chmod +x /tmp/wectl-setup && /tmp/wectl-setup
+curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-launcher-prebuilt -o /tmp/wectl-setup && chmod +x /tmp/wectl-setup && /tmp/wectl-setup
 ```
 
 ```text
@@ -48,7 +48,7 @@ curl -fL https://github.com/wectl/releases/download/v-0.1/wectl-launcher-prebuil
 Downloads and deploys a pre-compiled static `x86_64` binary (Arch Linux / glibc) without requiring a local compiler toolchain.
 
 ```bash
-curl -fL https://github.com/wectl/releases/download/v-0.1/wectl-launcher-prebuilt -o /tmp/wectl-setup && chmod +x /tmp/wectl-setup && /tmp/wectl-setup
+curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-launcher-prebuilt -o /tmp/wectl-setup && chmod +x /tmp/wectl-setup && /tmp/wectl-setup
 ```
 
 ```text
@@ -68,7 +68,7 @@ curl -fL https://github.com/wectl/releases/download/v-0.1/wectl-launcher-prebuil
 Clones the repository, cleans previous build artifacts, and builds directly via `Makefile`.
 
 ```bash
-git clone https://github.com/wectl.git && cd wectl/src/v-0.1/v-0.1_git && make clean-install
+git clone https://github.com/ltwtd/wectl.git && cd wectl/src/v-0.1/v-0.1_git && make clean-install
 ```
 
 ```text
