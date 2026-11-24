@@ -2,9 +2,9 @@
 pkgname=wectl-git
 pkgver=0.1.r1.g0000000
 pkgrel=1
-pkgdesc="Pure C++20 modular Wallpaper Engine gallery daemon and TUI/CLI for Hyprland"
+pkgdesc="Ultra-lightweight pure C++20 modular Wallpaper Engine gallery daemon and TUI/CLI for Hyprland"
 arch=('x86_64')
-url="https://github.com"
+url="https://github.com/ltwtd/wectl"
 license=('MIT')
 depends=(
     'glibc'
@@ -24,7 +24,7 @@ makedepends=(
 )
 provides=('wectl')
 conflicts=('wectl')
-source=("${pkgname}::git+${url}.git")
+source=("${pkgname}::git+https://github.com")
 sha256sums=('SKIP')
 
 pkgver() {
