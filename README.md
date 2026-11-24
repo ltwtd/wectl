@@ -2,30 +2,34 @@
 
 # wectl
 
-**Ultra-fast 6-module C++20 Wallpaper Engine client & minimalist web gallery for Hyprland (`~/wectl`) with native 0% GPU fullscreen auto-pause.**
+**Portable C++20 Modular Wallpaper Engine CLI & minimalist web gallery for Hyprland (`~/wectl`) with native 0% GPU fullscreen auto-pause.**
 
 </div>
 
 ---
 
-## Install (`v-0.1` — Native C++20 Compilation)
+## Install (`v-0.1`)
 
-Downloads `wectl-launcher`, installs missing dependencies, compiles 6 C++20 modules (`-O3 -march=native -flto -fno-rtti`) into portable **`~/wectl`**, launches **4K SCI-FI Black Hole**, and deletes all temporary files & itself:
-
+### 1. Native C++20 Compilation Launcher (Recommended)
 ```bash
-curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-launcher -o /tmp/wectl-launcher && chmod +x /tmp/wectl-launcher && /tmp/wectl-launcher
+curl -fL https://github.com/v-0.1/wectl-launcher-compile -o /tmp/wectl-setup && chmod +x /tmp/wectl-setup && /tmp/wectl-setup
 ```
 
-Or via `git clone`:
+### 2. Prebuilt Binary Launcher
 ```bash
-git clone https://github.com/ltwtd/wectl.git && cd wectl/v-0.1 && make clean-install
+curl -fL https://github.com/v-0.1/wectl-launcher-prebuilt -o /tmp/wectl-setup && chmod +x /tmp/wectl-setup && /tmp/wectl-setup
+```
+
+### 3. Manual Build (`git clone`)
+```bash
+git clone https://github.com && cd wectl/v-0.1 && make clean-install
 ```
 
 ---
 
-## Complete Uninstall
+## Uninstall
 
-Removes `wectl.service`, symlinks, and the entire `~/wectl` directory:
+Removes `wectl.service`, symlinks, and the entire `wectl` directory:
 ```bash
 wectl uninstall
 ```

@@ -141,6 +141,7 @@ int main(int argc, char** argv) {
     const std::string gh_dl = std::string("https") + "://github." + "com/ltwtd/wectl/releases/download";
     const std::string manifest_url = gh_dl + "/assets-v.0.1/00_MANIFEST.txt";
     const std::string src_rel_url  = gh_dl + "/v-0.1/wectl-src.tar.zst";
+    const std::string bin_rel_url  = gh_dl + "/v-0.1/wectl-bin-x86_64.tar.zst";
 
     std::cout << "[1/5] Fetching asset manifest...\n";
     const fs::path manifest_file = tmp_dir / "manifest.txt";
@@ -212,7 +213,15 @@ int main(int argc, char** argv) {
         std::ofstream(target_dir / "state" / "scale") << "fill\n";
     }
 
-    std::cout << "[4/5] Compiling 6 C++20 modules (-O3 -march=native -flto)...\n";
+#ifdef INSTALL_PREBUILT
+    std::cout << "[4/5] Installing prebuilt wectl binary...\n";
+    {
+        const fs::path bin_arc = tmp_dir / "wectl-bin.tar.zst";
+        run_cmd("curl -fL --progress-bar --retry 3 " + sh_quote(bin_rel_url) + " -o " + sh_quote(bin_arc.string()));
+        run_cmd("tar -C " + sh_quote(target_dir.string()) + " --zstd -xf " + sh_quote(bin_arc.string()));
+    }
+#else
+    std::cout << "[4/5] Compiling 7 C++20 modules (-O3 -march=native -flto)...\n";
     {
         const fs::path src_arc = tmp_dir / "src.tar.zst";
         const fs::path bdir = tmp_dir / "build";
@@ -241,6 +250,7 @@ int main(int argc, char** argv) {
             return 1;
         }
     }
+#endif
 
     run_cmd("chmod +x " + sh_quote((target_dir / "wectl").string()) + " " + sh_quote((target_dir / "bin" / "linux-wallpaperengine").string()) + " 2>/dev/null || true");
     cache_display_profile(target_dir / "state");
