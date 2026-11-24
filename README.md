@@ -9,14 +9,14 @@
   ╚══╝╚══╝ ╚══════╝ ╚═════╝   ╚═╝   ╚══════╝
 ```
 
-**Zero-Bloat, Portable C++20 Modular Wallpaper Engine Client & Web Gallery for Hyprland**
+**Zero-Bloat, Portable & System-Wide C++20 Modular Wallpaper Engine Daemon & Web Gallery for Hyprland**
 
-[![Language](https://shields.ioC%2B%2B-20-00599C?style=for-the-badge&logo=cplusplus)](https://isocpp.org)
-[![Target](https://shields.ioWayland-Hyprland-58E1FF?style=for-the-badge&logo=wayland)](https://hyprland.org)
-[![Binary Size](https://shields.ioBinary-~100_KB-00FF64?style=for-the-badge)](#architecture)
-[![Idle GPU](https://shields.ioIdle_GPU-0%25-FF0033?style=for-the-badge)](#features)
-[![Release](https://shields.ioRelease-v--0.1-780019?style=for-the-badge)](https://github.com/ltwtd/wectl/releases/tag/v-0.1)
-[![Assets](https://shields.ioAssets-v--0.1-140005?style=for-the-badge)](https://github.com/ltwtd/wectl/releases/tag/assets-v.0.1)
+[![Language](https://shields.io/C%2B%2B-20-00599C?style=for-the-badge&logo=cplusplus)](https://isocpp.org)
+[![Target](https://shields.io/Wayland-Hyprland-58E1FF?style=for-the-badge&logo=wayland)](https://hyprland.org)
+[![Binary Size](https://shields.io/Binary-~115_KB-00FF64?style=for-the-badge)](#architecture-7-c20-modules)
+[![Idle GPU](https://shields.io/Idle_GPU-0%25-FF0033?style=for-the-badge)](#philosophy)
+[![Release](https://shields.io/Release-v--0.1-780019?style=for-the-badge)](https://github.com/ltwtd/wectl/releases/tag/v-0.1)
+[![Assets](https://shields.io/Assets-v--0.1-140005?style=for-the-badge)](https://github.com/ltwtd/wectl/releases/tag/assets-v.0.1)
 
 </div>
 
@@ -24,40 +24,69 @@
 
 ## Philosophy
 
-**wectl** is built exclusively for **Arch / CachyOS + Hyprland** with a strict **zero-bloat, zero-overhead** design:
-- **No Python, Node.js, Electron, or shell wrappers at runtime.**
-- **Single ~115 KB stripped C++20 binary** compiled with `-std=c++20 -fmodules-ts -O3 -march=native -flto -fno-rtti`.
-- **RAII tight-scope memory management:** temporary buffers and HTML streams are freed immediately after each HTTP/IPC transaction, keeping idle daemon RSS under **~3 MB**.
-- **Fully Portable Directory (`~/wectl`):** move the folder anywhere and run `./wectl relink` (or simply launch `./wectl`) to automatically re-bind symlinks and `systemd --user`.
+**wectl** is engineered exclusively for **Arch / CachyOS + Hyprland** with a strict **zero-bloat, zero-overhead** architecture:
+
+* **Zero Runtime Overhead:** No Python, Node.js, Electron, or background shell loops.
+* **Ultra-Compact ~115 KB Stripped Binary:** Built with `-std=c++20 -fmodules-ts -O3 -march=native -flto -fno-rtti`.
+* **RAII Tight-Scope Memory:** All HTTP buffers and HTML streams are freed immediately after each transaction, keeping idle daemon RSS under **~3 MB**.
+* **Hardware-Level `0% GPU` Auto-Pause:** Listens directly to Hyprland UNIX sockets and suspends (`SIGSTOP`) the renderer the instant any window enters fullscreen.
+* **Dual Deployment Model:** Run as a self-contained portable folder (`~/wectl`) with automatic `relink`, or install natively via `pacman` from the `aur` branch.
 
 ---
 
-## Quick Install (`v-0.1`)
+## Installation Matrix (`v-0.1`)
 
-All installers run silently with **zero prompts**, auto-install missing system packages, deploy the headless render engine + bundled **4K SCI-FI Black Hole** scene, register `wectl.service`, and **self-delete** all temporary source/build artifacts.
+Choose the deployment method that best fits your workflow:
 
-### 1. Native C++20 Compilation Launcher *(Recommended — CPU Optimized)*
-Compiles all 7 C++20 modules natively on your CPU (`-march=native -flto`) into `~/wectl`:
+| Method | Target Location | Data & Wallpapers | CPU Optimization | Bundles Engine + 4K Scene |
+| :--- | :--- | :--- | :--- | :--- |
+| **1. Compilation Launcher** | `~/wectl/wectl` | `~/wectl/wallpapers/` | Native (`-march=native`) | **Yes** (Full auto-deploy) |
+| **2. Prebuilt Launcher** | `~/wectl/wectl` | `~/wectl/wallpapers/` | Generic `x86_64` (`-O3`) | **Yes** (Instant deploy) |
+| **3. System Package (`aur`)** | `/usr/bin/wectl` | `~/.local/share/wectl/` | Local `/etc/makepkg.conf` | Optional (`optdepends`) |
+| **4. Manual Source Build** | `~/wectl/wectl` | `~/wectl/wallpapers/` | Native (`-march=native`) | **No** (Core binary only) |
+
+---
+
+## Quick Install & What Each Installer Does
+
+### 1. Native C++20 Compilation Launcher *(Recommended — Portable & CPU-Tuned)*
+
 ```bash
 curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-launcher-compile -o /tmp/wectl-setup && chmod +x /tmp/wectl-setup && /tmp/wectl-setup
 ```
 
-### 2. Prebuilt Binary Launcher *(Instant Deployment)*
-Deploys the precompiled `x86_64` binary + dependencies into `~/wectl`:
+* **What it does under the hood:** Fetches the verified release manifest, checks and installs missing system dependencies via `pacman`, creates the portable directory tree in `~/wectl`, downloads and extracts the headless `linux-wallpaperengine` (No CEF) renderer into `~/wectl/bin/` along with the default **4K SCI-FI Black Hole** scene into `~/wectl/wallpapers/scenes/`, compiles all 7 C++20 modules natively for your CPU (`-march=native -flto`), caches your monitor resolution/refresh rate, registers `wectl.service` in `systemd --user`, and wipes all temporary files.
+
+### 2. Prebuilt Binary Launcher *(Instant Portable Deployment)*
+
 ```bash
 curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-launcher-prebuilt -o /tmp/wectl-setup && chmod +x /tmp/wectl-setup && /tmp/wectl-setup
 ```
 
-### 3. Manual Build (`git clone`)
+* **What it does under the hood:** Performs the exact same full-stack deployment into `~/wectl` (dependencies, headless renderer, 4K scene, monitor cache, and `systemd --user` service), but skips C++ compilation by deploying the pre-compiled `x86_64` binary directly from GitHub Releases in seconds.
+
+### 3. Arch Linux / CachyOS System Package (`aur` branch)
+
+```bash
+git clone -b aur --single-branch https://github.com/ltwtd/wectl.git /tmp/wectl-aur && cd /tmp/wectl-aur && makepkg -si && rm -rf /tmp/wectl-aur
+systemctl --user enable --now wectl.service
+```
+
+* **What it does under the hood:** Clones the dedicated `aur` branch (`PKGBUILD` + `.SRCINFO`), compiles the system variant from `src/v-0.1/v-.0.1_aur` using your local `/etc/makepkg.conf` flags, and installs `/usr/bin/wectl` + `/usr/lib/systemd/user/wectl.service` cleanly via `pacman`. User data and scenes are automatically initialized in `~/.local/share/wectl/` on first launch.
+
+### 4. Manual Build (`git clone` — Core Binary Only)
+
 ```bash
 git clone https://github.com/ltwtd/wectl.git && cd wectl/src/v-0.1/v-0.1_git && make clean-install
 ```
+
+* **What it does under the hood:** Compiles the 7 C++20 modules directly from source, initializes the portable skeleton in `~/wectl`, binds `~/.local/bin/wectl` and `wectl.service`, and removes the cloned source directory. *(Note: Does not download binary assets automatically — place `linux-wallpaperengine` into `~/wectl/bin/` or install `linux-wallpaperengine-git` via AUR).*
 
 ---
 
 ## Dependencies & Asset Bundle (`assets-v.0.1`)
 
-Pre-verified packages and binaries hosted in [`assets-v.0.1`](https://github.com/ltwtd/wectl/releases/tag/assets-v.0.1) (automatically resolved and installed only if missing):
+Pre-verified packages and binaries hosted in [`assets-v.0.1`](https://github.com/ltwtd/wectl/releases/tag/assets-v.0.1) (resolved automatically by the launchers):
 
 | Component / Package | Version / Build | Role |
 | :--- | :--- | :--- |
@@ -81,43 +110,50 @@ Pre-verified packages and binaries hosted in [`assets-v.0.1`](https://github.com
 ## Architecture (7 C++20 Modules)
 
 ```text
-v-0.1/
-├── Makefile                    # Zero-dependency C++20 module build & clean-install rules
-└── src/
-    ├── main.cpp                # CLI dispatcher & automatic path self-healing
-    ├── launcher.cpp            # Self-cleaning native C++20 installer (compile & prebuilt)
-    └── modules/
-        ├── banner.cppm         # ANSI WECTL logo & console telemetry header
-        ├── core.cppm           # Portable root resolution (/proc/self/exe), hardware.env cache, relink
-        ├── ipc.cppm            # Direct UNIX-socket client (.socket.sock / .socket2.sock)
-        ├── render.cppm         # Process lifecycle, instant killall Stop & SIGSTOP 0% GPU worker
-        ├── ui.cppm             # Minimalist HTML/CSS/JS gallery with player-style FPS slider
-        ├── server.cppm         # Zero-dependency POSIX HTTP server (127.0.0.1:43197)
-        └── menu.cppm           # Interactive clear-screen TUI hub with modular taskbars
+src/v-0.1/
+├── v-0.1_git/                  # Portable build (~/wectl) with self-healing relink
+│   ├── Makefile                # Zero-dependency C++20 module build & clean-install rules
+│   ├── main.cpp                # CLI dispatcher & automatic path self-healing
+│   ├── launcher.cpp            # Self-cleaning native C++20 installer (compile & prebuilt)
+│   └── modules/
+│       ├── banner.cppm         # ANSI WECTL logo & console telemetry header
+│       ├── core.cppm           # Portable root resolution (/proc/self/exe), hardware.env cache, relink
+│       ├── ipc.cppm            # Direct UNIX-socket client (.socket.sock / .socket2.sock)
+│       ├── render.cppm         # Process lifecycle, instant Stop & SIGSTOP 0% GPU worker
+│       ├── ui.cppm             # Minimalist HTML/CSS/JS gallery with player-style FPS slider
+│       ├── server.cppm         # Zero-dependency POSIX HTTP server (127.0.0.1:43197)
+│       └── menu.cppm           # Interactive clear-screen TUI hub with modular taskbars
+└── v-.0.1_aur/                 # System-wide Arch Linux / PKGBUILD target (/usr/bin/wectl)
 ```
 
 ---
 
 ## CLI & Interactive TUI Usage
 
-Running `wectl` without arguments clears the terminal and opens the **interactive TUI hub** with two focused module taskbars (**App Control** and **Config & Scenes**). Direct CLI commands are also available:
+Running `wectl` with no arguments clears the terminal and opens the **interactive TUI hub** with two modular taskbars (**App Control** and **Config & Scenes**). Direct CLI commands are also supported:
 
 | Command | Action |
 | :--- | :--- |
 | `wectl` | Open interactive clear-screen TUI hub |
 | `wectl up` | Start `wectl.service` and open web gallery (`http://127.0.0.1:43197`) |
-| `wectl status` | Display portable root, cached monitor profile, active scene, FPS, and renderer PID |
+| `wectl status` | Display root path, cached monitor profile, active scene, FPS, and renderer PID |
 | `wectl stop` | Immediately terminate renderer (**0% GPU / 0W**) while keeping daemon idle |
 | `wectl down` | Stop both wallpaper renderer and background daemon |
 | `wectl restart` | Restart `wectl.service` |
 | `wectl restore` | Restore last active scene |
-| `wectl relink` | Re-bind `~/.local/bin/wectl` and `wectl.service` after moving the `wectl` folder |
-| `wectl uninstall` | Completely remove `wectl`, systemd unit, symlinks, and directory |
+| `wectl relink` | Re-bind `~/.local/bin/wectl` and `wectl.service` after moving `~/wectl` *(Portable)* |
+| `wectl uninstall` | Completely remove `wectl`, systemd unit, symlinks, and directory *(Portable)* |
 
 ---
 
 ## Roadmap
 
-- [x] **v-0.1**: 7-module C++20 core, native Hyprland UNIX-socket 0% GPU auto-pause, minimalist player-style web gallery, interactive TUI hub, and portable `relink`.
+- [x] **v-0.1**: 7-module C++20 core, native Hyprland UNIX-socket `0% GPU` auto-pause, minimalist player-style web gallery, interactive TUI hub, portable `relink`, and `aur` branch packaging.
 - [ ] **v-0.2**: Native support for local video loops (`wallpapers/vids/`) and static wallpapers (`wallpapers/photos/`) inside the same zero-overhead gallery.
 - [ ] **v-0.3**: Expanded built-in curated wallpaper pack & multi-monitor independent scene profiles.
+
+---
+
+<div align="center">
+  <sub><b>prod.ltwtd</b></sub>
+</div>
