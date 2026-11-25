@@ -106,8 +106,8 @@ mkdir -p /tmp/wectl-v01-full && \
 curl -fL https://github.com/ltwtd/wectl/releases/download/assets/04_lwe-full-sources.tar.zst | tar --zstd -xf - -C /tmp/wectl-v01-full && \
 curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-src.tar.zst | tar --zstd -xf - -C /tmp/wectl-v01-full && \
 cmake -S /tmp/wectl-v01-full/linux-wallpaperengine -B /tmp/wectl-v01-full/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE="-O3 -march=native -flto=auto -DNDEBUG" && \
-ninja -C /tmp/wectl-v01-full/build -j"\$(nproc)" && \
-make -C /tmp/wectl-v01-full -j"\$(nproc)" && \
+ninja -C /tmp/wectl-v01-full/build && \
+make -C /tmp/wectl-v01-full && \
 rm -rf /tmp/wectl-v01-full
 ```
 
