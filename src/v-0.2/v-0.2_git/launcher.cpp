@@ -276,12 +276,12 @@ int main(int argc, char** argv) {
             std::ofstream unit(unit_dir / "wectl.service", std::ios::trunc);
             unit << "[Unit]\nDescription=Pure C++20 Wallpaper Engine Gallery Daemon (Hyprland)\n"
                  << "After=default.target\nStartLimitIntervalSec=0\n\n"
-                 << "[Service]\nType=simple\n"
+                 << "[Service]\nType=simple\nPassEnvironment=WAYLAND_DISPLAY XDG_RUNTIME_DIR HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP\n"
                  << "WorkingDirectory=" << target_dir.string() << "\n"
                  << "Environment=\"PATH=" << (target_dir / "bin").string() << ":" << local_bin.string() << ":/usr/local/bin:/usr/bin:/bin\"\n"
                  << "Environment=\"LD_LIBRARY_PATH=" << (target_dir / "lib").string() << "\"\n"
                  << "Environment=\"XDG_SESSION_TYPE=wayland\"\n"
-                 << "ExecStartPre=/bin/sh -c 'until [ -n \"$WAYLAND_DISPLAY\" ] || systemctl --user show-environment | grep -q \"WAYLAND_DISPLAY=\"; do sleep 0.2; done'\n"
+                 << "ExecStartPre=/bin/sh -c 'until systemctl --user show-environment | grep -q \"HYPRLAND_INSTANCE_SIGNATURE=\"; do sleep 0.2; done; sleep 0.5'\n"
                  << "ExecStart=" << (target_dir / "wectl").string() << " daemon\n"
                  << "Restart=on-failure\nRestartSec=1\n\n[Install]\nWantedBy=default.target\n";
         }

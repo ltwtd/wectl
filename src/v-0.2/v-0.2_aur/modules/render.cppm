@@ -196,7 +196,18 @@ inline ResolvedTarget resolve_media(std::string_view input) {
 }
 
 inline pid_t spawn_media_process(const ResolvedTarget& t, int fps) {
-    const std::string mon_str = load_hw().monitor;
+    std::string mon_str = load_hw().monitor;
+    const std::string jmon = query_socket("j/monitors");
+    if (!jmon.empty() && jmon.find("\"" + mon_str + "\"") == std::string::npos) {
+        const size_t kpos = jmon.find("\"name\":");
+        if (kpos != std::string::npos) {
+            const size_t q1 = jmon.find('"', kpos + 7);
+            const size_t q2 = (q1 != std::string::npos) ? jmon.find('"', q1 + 1) : std::string::npos;
+            if (q1 != std::string::npos && q2 != std::string::npos && q2 > q1 + 1) {
+                mon_str = jmon.substr(q1 + 1, q2 - q1 - 1);
+            }
+        }
+    }
     const std::string path_str = t.path.string();
     const std::string fps_str = std::to_string(fps);
 

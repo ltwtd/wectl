@@ -23,7 +23,7 @@ static void print_banner() {
         " ╚███╔███╔╝███████╗╚██████╗   ██║   ███████╗\n"
         "  ╚══╝╚══╝ ╚══════╝ ╚═════╝   ╚═╝   ╚══════╝\n"
         "\033[0m"
-        " \033[1;32m[v-0.2 Installer]\033[0m Ultra-Optimized NOCEF Engine & C++20 Gallery\n\n";
+        " \033[1;32m[v-0.1 Installer]\033[0m Portable Hyprland C++20 Build\n\n";
 }
 
 static std::string sh_quote(std::string_view s) {
@@ -40,17 +40,6 @@ static std::string sh_quote(std::string_view s) {
 
 static int run_cmd(const std::string& cmd) {
     return std::system(cmd.c_str());
-}
-
-static std::string run_capture(const std::string& cmd) {
-    std::string out;
-    FILE* fp = popen(cmd.c_str(), "r");
-    if (!fp) return out;
-    char buf[512];
-    while (fgets(buf, sizeof(buf), fp)) out += buf;
-    pclose(fp);
-    while (!out.empty() && (out.back() == '\n' || out.back() == '\r' || out.back() == ' ')) out.pop_back();
-    return out;
 }
 
 static std::string hypr_ipc(std::string_view cmd) {
@@ -115,44 +104,22 @@ static void cache_display_profile(const fs::path& state_dir) {
     std::cout << "[HW] Display cached: " << mon << " (" << res << " @ " << max_hz << "Hz)\n";
 }
 
-static bool is_arch_x86_64() {
-    std::ifstream osr("/etc/os-release");
+static bool is_cachy_v3() {
+    std::ifstream cpu("/proc/cpuinfo"), osr("/etc/os-release");
+    std::string c((std::istreambuf_iterator<char>(cpu)), std::istreambuf_iterator<char>());
     std::string o((std::istreambuf_iterator<char>(osr)), std::istreambuf_iterator<char>());
-    bool arch_like = (o.find("arch") != std::string::npos || o.find("cachyos") != std::string::npos || o.find("CachyOS") != std::string::npos);
-    return arch_like && fs::exists("/usr/bin/pacman");
+    return c.find("avx2") != std::string::npos && c.find("bmi2") != std::string::npos &&
+           (o.find("cachyos") != std::string::npos || o.find("CachyOS") != std::string::npos);
 }
 
-struct DepSpec {
-    std::string filename;
-    std::string url;
-    std::string pkg_name;
-    std::string pkg_ver;
-};
-
-static DepSpec parse_dep_asset(std::string_view name, std::string_view url) {
-    DepSpec d{std::string(name), std::string(url), {}, {}};
-    std::string_view s = name;
-    if (s.rfind("03_dep-", 0) == 0) s.remove_prefix(7);
-    if (s.size() > 12 && s.substr(s.size() - 12) == ".pkg.tar.zst") s.remove_suffix(12);
-    for (const std::string_view arch : {"-x86_64_v3", "-x86_64", "-any"}) {
-        if (s.size() > arch.size() && s.substr(s.size() - arch.size()) == arch) {
-            s.remove_suffix(arch.size());
-            break;
+static std::string pkg_base(std::string_view asset) {
+    if (asset.rfind("03_dep-", 0) == 0) asset.remove_prefix(7);
+    for (size_t i = 0; i + 1 < asset.size(); ++i) {
+        if (asset[i] == '-' && std::isdigit(static_cast<unsigned char>(asset[i + 1]))) {
+            return std::string(asset.substr(0, i));
         }
     }
-    for (size_t i = 0; i + 1 < s.size(); ++i) {
-        if (s[i] == '-' && std::isdigit(static_cast<unsigned char>(s[i + 1]))) {
-            d.pkg_name = std::string(s.substr(0, i));
-            std::string v(s.substr(i + 1));
-            for (char& c : v) {
-                if (c == '_') c = ':';
-            }
-            d.pkg_ver = std::move(v);
-            return d;
-        }
-    }
-    d.pkg_name = std::string(s);
-    return d;
+    return std::string(asset);
 }
 
 int main(int argc, char** argv) {
@@ -171,156 +138,168 @@ int main(int argc, char** argv) {
     const fs::path tmp_dir = fs::temp_directory_path() / ("wectl_inst_" + std::to_string(getpid()));
     fs::create_directories(tmp_dir);
 
-    const std::string gh_dl = std::string("https") + "://github." + "com/ltwtd/wectl/releases/download";
-    const std::string manifest_url = gh_dl + "/assets/00_MANIFEST.txt";
-    const std::string src_rel_url  = gh_dl + "/v-0.2/wectl-src.tar.zst";
-    const std::string bin_rel_url  = gh_dl + "/v-0.2/wectl-bin-x86_64.tar.zst";
+        const std::string gh_dl = std::string("https") + "://github." + "com/ltwtd/wectl/releases/download";
+        const std::string manifest_url = gh_dl + "/assets-v.0.1/00_MANIFEST.txt";
+        const std::string src_rel_url  = gh_dl + "/v-0.1/wectl-src.tar.zst";
+        const std::string bin_rel_url  = gh_dl + "/v-0.1/wectl-bin-x86_64.tar.zst";
 
-    std::cout << "[1/5] Fetching shared asset manifest...\n";
-    const fs::path manifest_file = tmp_dir / "manifest.txt";
-    if (run_cmd("curl -fsSL " + sh_quote(manifest_url) + " -o " + sh_quote(manifest_file.string())) != 0) {
-        std::cerr << "Error: Failed to fetch manifest from assets release.\n";
-        fs::remove_all(tmp_dir);
-        return 1;
-    }
-
-    std::string engine_url, scene_url;
-    std::vector<DepSpec> deps;
-    {
-        std::ifstream mf(manifest_file);
-        std::string line;
-        while (std::getline(mf, line)) {
-            while (!line.empty() && (line.back() == '\r' || line.back() == '\n')) line.pop_back();
-            if (line.empty()) continue;
-            std::string name, url;
-            const auto bar = line.find('|');
-            if (bar != std::string::npos) {
-                name = line.substr(0, bar);
-                url  = line.substr(bar + 1);
-            } else {
-                const auto sp = line.find_last_of(" \t");
-                if (sp == std::string::npos) continue;
-                name = line.substr(sp + 1);
-                url  = gh_dl + "/assets/" + name;
-            }
-            if (name == "01_lwe-engine-native-full.tar.zst") engine_url = std::move(url);
-            else if (name == "02_default-scene-blackhole-4k.tar.zst") scene_url = std::move(url);
-            else if (name.rfind("03_dep-", 0) == 0) deps.push_back(parse_dep_asset(name, url));
+        std::cout << "[1/5] Fetching asset manifest...\n";
+        const fs::path manifest_file = tmp_dir / "manifest.txt";
+        if (run_cmd("curl -fsSL " + sh_quote(manifest_url) + " -o " + sh_quote(manifest_file.string())) != 0) {
+            std::cerr << "Error: Failed to fetch manifest.\n";
+            fs::remove_all(tmp_dir);
+            return 1;
         }
-    }
 
-    std::cout << "[2/5] Installing exact verified dependencies from shared assets...\n";
-    if (is_arch_x86_64() && !deps.empty()) {
-        bool need_local = false;
-        for (const auto& d : deps) {
-            const std::string inst = run_capture("pacman -Q " + sh_quote(d.pkg_name) + " 2>/dev/null");
-            const std::string expected = d.pkg_ver.empty() ? d.pkg_name : (d.pkg_name + " " + d.pkg_ver);
-            if (inst != expected) {
-                std::cout << "  -> Fetching verified " << expected << (inst.empty() ? " (missing)" : (" (installed: " + inst + ")")) << "...\n";
-                const fs::path dst = tmp_dir / d.filename;
-                if (run_cmd("curl -fL --progress-bar --retry 3 " + sh_quote(d.url) + " -o " + sh_quote(dst.string())) == 0) {
-                    need_local = true;
+        std::string engine_url, scene_url;
+        std::vector<std::pair<std::string, std::string>> dep_urls;
+        {
+            std::ifstream mf(manifest_file);
+            std::string line;
+            while (std::getline(mf, line)) {
+                const auto bar = line.find('|');
+                if (bar == std::string::npos) continue;
+                std::string name = line.substr(0, bar);
+                std::string url  = line.substr(bar + 1);
+                while (!url.empty() && (url.back() == '\r' || url.back() == '\n')) url.pop_back();
+                if (name == "01_lwe-engine-nocef-r643.tar.zst") engine_url = std::move(url);
+                else if (name == "02_default-scene-blackhole-4k.tar.zst") scene_url = std::move(url);
+                else if (name.rfind("03_dep-", 0) == 0) dep_urls.emplace_back(std::move(name), std::move(url));
+            }
+        }
+
+        std::cout << "[2/5] Checking & installing missing dependencies...\n";
+        if (is_cachy_v3()) {
+            bool need_local = false;
+            for (const auto& [name, url] : dep_urls) {
+                const std::string pkg = pkg_base(name);
+                if (run_cmd("pacman -Qi " + sh_quote(pkg) + " >/dev/null 2>&1") != 0) {
+                    std::cout << "  -> Downloading " << pkg << "...\n";
+                    const fs::path dst = tmp_dir / name;
+                    if (run_cmd("curl -fL --progress-bar --retry 3 " + sh_quote(url) + " -o " + sh_quote(dst.string())) == 0) {
+                        need_local = true;
+                    }
                 }
             }
+            if (need_local) {
+                run_cmd("sudo pacman -U --needed --noconfirm " + sh_quote(tmp_dir.string()) + "/03_dep-*.pkg.tar.zst");
+            }
+        } else {
+            run_cmd("sudo pacman -S --needed --noconfirm ffmpeg mpv sdl2-compat lz4 glew glm wayland procps-ng xdg-utils gcc libjxl libplacebo sndio curl zstd psmisc");
         }
-        if (need_local) {
-            run_cmd("sudo pacman -U --noconfirm " + sh_quote(tmp_dir.string()) + "/03_dep-*.pkg.tar.zst");
-        }
-    } else {
-        run_cmd("sudo pacman -S --needed --noconfirm ffmpeg mpv sdl2-compat lz4 glew glm wayland procps-ng xdg-utils gcc libjxl libplacebo sndio curl zstd psmisc");
-    }
-    deps.clear();
-    deps.shrink_to_fit();
+        dep_urls.clear();
+        dep_urls.shrink_to_fit();
 
-    std::cout << "[3/5] Deploying ultra-optimized NOCEF engine & default 4K scene into " << target_dir.string() << "...\n";
-fs::create_directories(target_dir / "bin");
-fs::create_directories(target_dir / "state");
-fs::create_directories(target_dir / "wallpapers" / "scenes");
-fs::create_directories(target_dir / "wallpapers" / "scenes_hidden");
-fs::create_directories(target_dir / "wallpapers" / "vids");
-fs::create_directories(target_dir / "wallpapers" / "vids_hidden");
-fs::create_directories(target_dir / "wallpapers" / "photos");
-fs::create_directories(target_dir / "wallpapers" / "photos_hidden");
-if (!engine_url.empty()) {
-const fs::path arc = tmp_dir / "engine.tar.zst";
-run_cmd("curl -fL --progress-bar --retry 3 " + sh_quote(engine_url) + " -o " + sh_quote(arc.string()));
-run_cmd("tar -C " + sh_quote(target_dir.string()) + " --zstd -xf " + sh_quote(arc.string()));
-fs::remove(arc);
-}
-if (!scene_url.empty()) {
-const fs::path arc = tmp_dir / "scene.tar.zst";
-run_cmd("curl -fL --progress-bar --retry 3 " + sh_quote(scene_url) + " -o " + sh_quote(arc.string()));
-run_cmd("tar -C " + sh_quote((target_dir / "wallpapers" / "scenes").string()) + " --zstd -xf " + sh_quote(arc.string()));
-fs::remove(arc);
-std::ofstream(target_dir / "state" / "current") << "4K SCI-FI Black Hole\n";
-std::ofstream(target_dir / "state" / "fps") << "60\n";
-std::ofstream(target_dir / "state" / "scale") << "fill\n";
-}
+        std::cout << "[3/5] Building portable skeleton in " << target_dir.string() << "...\n";
+        fs::create_directories(target_dir / "bin");
+        fs::create_directories(target_dir / "state");
+        fs::create_directories(target_dir / "wallpapers" / "scenes");
+        fs::create_directories(target_dir / "wallpapers" / "scenes_hidden");
+        fs::create_directories(target_dir / "wallpapers" / "vids");
+        fs::create_directories(target_dir / "wallpapers" / "photos");
+        fs::create_directories(target_dir / "wallpapers" / "scenes");
+        fs::create_directories(target_dir / "wallpapers" / "scenes_hidden");
+        fs::create_directories(target_dir / "wallpapers" / "vids");
+        fs::create_directories(target_dir / "wallpapers" / "vids_hidden");
+        fs::create_directories(target_dir / "wallpapers" / "photos");
+        fs::create_directories(target_dir / "wallpapers" / "photos_hidden");
+
+
+        if (!engine_url.empty()) {
+            const fs::path arc = tmp_dir / "engine.tar.zst";
+            run_cmd("curl -fL --progress-bar --retry 3 " + sh_quote(engine_url) + " -o " + sh_quote(arc.string()));
+            run_cmd("tar -C " + sh_quote(target_dir.string()) + " --zstd -xf " + sh_quote(arc.string()));
+            fs::remove(arc);
+        }
+
+        if (!scene_url.empty()) {
+            const fs::path arc = tmp_dir / "scene.tar.zst";
+            run_cmd("curl -fL --progress-bar --retry 3 " + sh_quote(scene_url) + " -o " + sh_quote(arc.string()));
+            run_cmd("tar -C " + sh_quote((target_dir / "wallpapers" / "scenes").string()) + " --zstd -xf " + sh_quote(arc.string()));
+            fs::remove(arc);
+            std::ofstream(target_dir / "state" / "current") << "4K SCI-FI Black Hole\n";
+            std::ofstream(target_dir / "state" / "fps") << "60\n";
+            std::ofstream(target_dir / "state" / "scale") << "fill\n";
+        }
+
 #ifdef INSTALL_PREBUILT
-std::cout << "[4/5] Installing prebuilt wectl binary...\n";
-{
-const fs::path bin_arc = tmp_dir / "wectl-bin.tar.zst";
-run_cmd("curl -fL --progress-bar --retry 3 " + sh_quote(bin_rel_url) + " -o " + sh_quote(bin_arc.string()));
-run_cmd("tar -C " + sh_quote(target_dir.string()) + " --zstd -xf " + sh_quote(bin_arc.string()));
-}
+        std::cout << "[4/5] Installing prebuilt wectl binary...\n";
+        {
+            const fs::path bin_arc = tmp_dir / "wectl-bin.tar.zst";
+            run_cmd("curl -fL --progress-bar --retry 3 " + sh_quote(bin_rel_url) + " -o " + sh_quote(bin_arc.string()));
+            run_cmd("tar -C " + sh_quote(target_dir.string()) + " --zstd -xf " + sh_quote(bin_arc.string()));
+        }
 #else
-std::cout << "[4/5] Compiling 7 C++20 modules (-O3 -march=native -flto)...\n";
-{
-const fs::path src_arc = tmp_dir / "src.tar.zst";
-const fs::path bdir = tmp_dir / "build";
-fs::create_directories(bdir);
-run_cmd("curl -fL --progress-bar --retry 3 " + sh_quote(src_rel_url) + " -o " + sh_quote(src_arc.string()));
-run_cmd("tar -C " + sh_quote(bdir.string()) + " --zstd -xf " + sh_quote(src_arc.string()));
-const std::string flags = "-std=c++20 -fmodules-ts -O3 -march=native -flto -fno-rtti -pthread";
-const std::string out_bin = (target_dir / "wectl").string();
-const std::string cmd =
-"cd " + sh_quote(bdir.string()) + " && "
-"g++ " + flags + " -c modules/banner.cppm -o banner.o && "
-"g++ " + flags + " -c modules/core.cppm -o core.o && "
-"g++ " + flags + " -c modules/ipc.cppm -o ipc.o && "
-"g++ " + flags + " -c modules/render.cppm -o render.o && "
-"g++ " + flags + " -c modules/ui.cppm -o ui.o && "
-"g++ " + flags + " -c modules/server.cppm -o server.o && "
-"g++ " + flags + " -c modules/menu.cppm -o menu.o && "
-"g++ " + flags + " -c main.cpp -o main.o && "
-"g++ " + flags + " banner.o core.o ipc.o render.o ui.o server.o menu.o main.o -o " + sh_quote(out_bin) + " && "
-"strip -s " + sh_quote(out_bin);
-if (run_cmd(cmd) != 0) {
-std::cerr << "Error: Compilation failed.\n";
-fs::remove_all(tmp_dir);
-return 1;
-}
-}
+        std::cout << "[4/5] Compiling 7 C++20 modules (-O3 -march=native -flto)...\n";
+        {
+            const fs::path src_arc = tmp_dir / "src.tar.zst";
+            const fs::path bdir = tmp_dir / "build";
+            fs::create_directories(bdir);
+            run_cmd("curl -fL --progress-bar --retry 3 " + sh_quote(src_rel_url) + " -o " + sh_quote(src_arc.string()));
+            run_cmd("tar -C " + sh_quote(bdir.string()) + " --zstd -xf " + sh_quote(src_arc.string()));
+
+            const std::string flags = "-std=c++20 -fmodules-ts -O3 -march=native -flto -fno-rtti -pthread";
+            const std::string out_bin = (target_dir / "wectl").string();
+            const std::string cmd =
+                "cd " + sh_quote(bdir.string()) + " && "
+                "g++ " + flags + " -c modules/banner.cppm -o banner.o && "
+                "g++ " + flags + " -c modules/core.cppm -o core.o && "
+                "g++ " + flags + " -c modules/ipc.cppm -o ipc.o && "
+                "g++ " + flags + " -c modules/render.cppm -o render.o && "
+                "g++ " + flags + " -c modules/ui.cppm -o ui.o && "
+                "g++ " + flags + " -c modules/server.cppm -o server.o && "
+                "g++ " + flags + " -c modules/menu.cppm -o menu.o && "
+                "g++ " + flags + " -c main.cpp -o main.o && "
+                "g++ " + flags + " banner.o core.o ipc.o render.o ui.o server.o menu.o main.o -o " + sh_quote(out_bin) + " && "
+                "strip -s " + sh_quote(out_bin);
+
+            if (run_cmd(cmd) != 0) {
+                std::cerr << "Error: Compilation failed.\n";
+                fs::remove_all(tmp_dir);
+                return 1;
+            }
+        }
 #endif
-run_cmd("chmod +x " + sh_quote((target_dir / "wectl").string()) + " " + sh_quote((target_dir / "bin" / "linux-wallpaperengine").string()) + " 2>/dev/null || true");
-cache_display_profile(target_dir / "state");
-const fs::path local_bin = fs::path(home) / ".local" / "bin";
-fs::create_directories(local_bin);
-fs::remove(local_bin / "wectl");
-fs::create_symlink(target_dir / "wectl", local_bin / "wectl");
-std::cout << "[5/5] Enabling wectl.service & wiping temporary files...\n";
-const fs::path unit_dir = fs::path(home) / ".config" / "systemd" / "user";
-fs::create_directories(unit_dir);
-{
-std::ofstream unit(unit_dir / "wectl.service", std::ios::trunc);
-unit << "[Unit]\nDescription=Pure C++20 Wallpaper Engine Gallery Daemon (Hyprland)\n"
-<< "After=graphical-session.target\nStartLimitIntervalSec=0\n\n"
-<< "[Service]\nPassEnvironment=WAYLAND_DISPLAY XDG_RUNTIME_DIR HYPRLAND_INSTANCE_SIGNATURE\n"
-<< "Environment=\"PATH=" << (target_dir / "bin").string() << ":" << local_bin.string() << ":/usr/local/bin:/usr/bin:/bin\"\n"
-<< "ExecStart=" << (target_dir / "wectl").string() << " daemon\n"
-<< "Restart=always\nRestartSec=1\n\n[Install]\nWantedBy=default.target\n";
+
+        run_cmd("chmod +x " + sh_quote((target_dir / "wectl").string()) + " " + sh_quote((target_dir / "bin" / "linux-wallpaperengine").string()) + " 2>/dev/null || true");
+        cache_display_profile(target_dir / "state");
+
+        const fs::path local_bin = fs::path(home) / ".local" / "bin";
+        fs::create_directories(local_bin);
+        fs::remove(local_bin / "wectl");
+        fs::create_symlink(target_dir / "wectl", local_bin / "wectl");
+
+        std::cout << "[5/5] Enabling wectl.service & wiping temporary files...\n";
+        const fs::path unit_dir = fs::path(home) / ".config" / "systemd" / "user";
+        fs::create_directories(unit_dir);
+        {
+            std::ofstream unit(unit_dir / "wectl.service", std::ios::trunc);
+            unit << "[Unit]\nDescription=Pure C++20 Wallpaper Engine Gallery Daemon (Hyprland)\n"
+                 << "After=default.target\nStartLimitIntervalSec=0\n\n"
+                 << "[Service]\nType=simple\nPassEnvironment=WAYLAND_DISPLAY XDG_RUNTIME_DIR HYPRLAND_INSTANCE_SIGNATURE XDG_CURRENT_DESKTOP\n"
+                 << "WorkingDirectory=" << target_dir.string() << "\n"
+                 << "Environment=\"PATH=" << (target_dir / "bin").string() << ":" << local_bin.string() << ":/usr/local/bin:/usr/bin:/bin\"\n"
+                 << "Environment=\"LD_LIBRARY_PATH=" << (target_dir / "lib").string() << "\"\n"
+                 << "Environment=\"XDG_SESSION_TYPE=wayland\"\n"
+                 << "ExecStartPre=/bin/sh -c 'until systemctl --user show-environment | grep -q \"HYPRLAND_INSTANCE_SIGNATURE=\"; do sleep 0.2; done; sleep 0.5'\n"
+                 << "ExecStart=" << (target_dir / "wectl").string() << " daemon\n"
+                 << "Restart=on-failure\nRestartSec=1\n\n[Install]\nWantedBy=default.target\n";
+        }
+
+        run_cmd("systemctl --user import-environment WAYLAND_DISPLAY XDG_RUNTIME_DIR HYPRLAND_INSTANCE_SIGNATURE PATH >/dev/null 2>&1 || true");
+        run_cmd("systemctl --user daemon-reload >/dev/null 2>&1");
+        run_cmd("systemctl --user reset-failed wectl.service >/dev/null 2>&1 || true");
+        run_cmd("systemctl --user enable --now wectl.service >/dev/null 2>&1");
+        run_cmd("systemctl --user restart wectl.service >/dev/null 2>&1");
+
+        fs::remove_all(tmp_dir);
+        if (!self_path.empty() && fs::exists(self_path)) {
+            std::error_code ec;
+            fs::remove(self_path, ec);
+        }
+
+        std::cout << "\nDone! Portable installation ready in: " << target_dir.string() << "\n"
+                  << "Commands: wectl up | wectl status | wectl stop | wectl uninstall\n";
+        return 0;
 }
-run_cmd("systemctl --user import-environment WAYLAND_DISPLAY XDG_RUNTIME_DIR HYPRLAND_INSTANCE_SIGNATURE PATH >/dev/null 2>&1 || true");
-run_cmd("systemctl --user daemon-reload >/dev/null 2>&1");
-run_cmd("systemctl --user reset-failed wectl.service >/dev/null 2>&1 || true");
-run_cmd("systemctl --user enable --now wectl.service >/dev/null 2>&1");
-run_cmd("systemctl --user restart wectl.service >/dev/null 2>&1");
-fs::remove_all(tmp_dir);
-if (!self_path.empty() && fs::exists(self_path)) {
-std::error_code ec;
-fs::remove(self_path, ec);
-}
-std::cout << "\nDone! Portable installation ready in: " << target_dir.string() << "\n"
-<< "Commands: wectl up | wectl status | wectl stop | wectl uninstall\n";
-return 0;
-}
+

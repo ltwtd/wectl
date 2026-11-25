@@ -257,7 +257,7 @@ inline void run_daemon() {
     std::signal(SIGCHLD, SIG_IGN);
 
     const std::string mon = load_hw().monitor;
-    while (query_socket("j/monitors").find(mon) == std::string::npos) {
+    for (int i = 0; i < 10 && query_socket("j/monitors").find(mon) == std::string::npos; ++i) {
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
@@ -275,6 +275,7 @@ inline void run_daemon() {
 
     {
         std::string saved = read_file(state_dir() / "current", "");
+        while (!saved.empty() && (saved.back() == '\n' || saved.back() == '\r' || saved.back() == ' ')) saved.pop_back();
         if (saved.empty()) {
             saved = "scene:4K SCI-FI Black Hole";
             std::error_code ec;
