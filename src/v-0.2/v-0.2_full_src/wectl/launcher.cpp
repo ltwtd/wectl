@@ -306,7 +306,7 @@ std::ofstream unit(unit_dir / "wectl.service", std::ios::trunc);
 unit << "[Unit]\nDescription=Pure C++20 Wallpaper Engine Gallery Daemon (Hyprland)\n"
 << "After=graphical-session.target\nStartLimitIntervalSec=0\n\n"
 << "[Service]\nPassEnvironment=WAYLAND_DISPLAY XDG_RUNTIME_DIR HYPRLAND_INSTANCE_SIGNATURE\n"
-<< "Environment="PATH=" << (target_dir / "bin").string() << ":" << local_bin.string() << ":/usr/local/bin:/usr/bin:/bin"\n"
+<< "Environment=\"PATH=" << (target_dir / "bin").string() << ":" << local_bin.string() << ":/usr/local/bin:/usr/bin:/bin\"\n"
 << "ExecStart=" << (target_dir / "wectl").string() << " daemon\n"
 << "Restart=always\nRestartSec=1\n\n[Install]\nWantedBy=default.target\n";
 }
