@@ -39,7 +39,7 @@ All installation modes deploy the exact same self-contained directory layout int
 
 ## 2. v-0.2 (Latest) — Installation
 
-> **Verified Dependency Matrix:** [`docs/COMPATIBILITY_v0.2.md`](https://github.com/ltwtd/wectl/blob/main/docs/COMPATIBILITY_v0.2.md)
+> **Verified Dependency Matrix:** [`docs/COMPATIBILITY_v0.2.md`](https://github.com/ltwtd/wectl/blob/main/docs/COMPATIBILITY_v0.2.md) &nbsp;|&nbsp; **Arch / AUR `PKGBUILD`:** [`src/v-0.2/v-0.2_aur/`](https://github.com/ltwtd/wectl/tree/main/src/v-0.2/v-0.2_aur)
 
 ### 2.1 Full Prebuilt (`pacman` + `lwe` + `wectl`)
 Fastest zero-compile setup: installs runtime dependencies via `pacman`, downloads the prebuilt `wectl` binary, and deploys the prebuilt optimized `lwe` bundle (`01_lwe-engine-native-full.tar.zst`) from `assets`.
@@ -84,25 +84,28 @@ rm -rf /tmp/wectl-src
 
 <h2 id="4-previous-versions" align="center">Previous Versions</h2>
 
-> **Verified Dependency Matrix:** [`docs/COMPATIBILITY_v0.1.md`](https://github.com/ltwtd/wectl/blob/main/docs/COMPATIBILITY_v0.1.md)
+> **Verified Dependency Matrix:** [`docs/COMPATIBILITY_v0.1.md`](https://github.com/ltwtd/wectl/blob/main/docs/COMPATIBILITY_v0.1.md) &nbsp;|&nbsp; **Arch / AUR `PKGBUILD`:** [`src/v-0.1/v-.0.1_aur/`](https://github.com/ltwtd/wectl/tree/main/src/v-0.1/v-.0.1_aur)
 
 ### 1. [`v-0.1`](https://github.com/ltwtd/wectl/releases/tag/v-0.1) — Pure C++20 Modular Client (Hyprland)
 
-**1.1 Full Prebuilt (`pacman` + `lwe` + `wectl`)**
+#### 1.1 Full Prebuilt (`pacman` + `lwe` + `wectl`)
+Fastest zero-compile setup: installs runtime dependencies via `pacman`, downloads the prebuilt `v-0.1` binary, and deploys the optimized `lwe` bundle from shared `assets`.
 ```bash
 sudo pacman -S --needed --noconfirm ffmpeg mpv glew glm lz4 sdl2-compat wayland xdg-utils zstd curl && \
 curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-installer-bin -o /tmp/wectl-inst && \
 chmod +x /tmp/wectl-inst && /tmp/wectl-inst && rm -f /tmp/wectl-inst
 ```
 
-**1.2 Native `wectl` + Verified Deps + Prebuilt `lwe`**
+#### 1.2 Native `wectl` + Verified Deps + Prebuilt `lwe`
+Compiles the modular C++20 `wectl v-0.1` client natively for your CPU (`-O3 -march=native -flto`), installs verified dependencies via `pacman`, and deploys the prebuilt optimized `lwe` engine.
 ```bash
 sudo pacman -S --needed --noconfirm base-devel gcc ffmpeg mpv glew glm lz4 sdl2-compat wayland xdg-utils zstd curl && \
 curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-installer-src -o /tmp/wectl-inst && \
 chmod +x /tmp/wectl-inst && /tmp/wectl-inst && rm -f /tmp/wectl-inst
 ```
 
-**1.3 Full Native Build (`lwe` + `wectl` + `pacman`)**
+#### 1.3 Full Native Build (`lwe` + `wectl` + `pacman`)
+Installs build & runtime packages via `pacman`, downloads both `lwe` and `wectl v-0.1` source trees, compiles everything natively for your CPU (`-O3 -march=native -flto=auto`), and starts the daemon.
 ```bash
 sudo pacman -S --needed --noconfirm base-devel git cmake ninja python ffmpeg mpv glew glm lz4 sdl2-compat wayland wayland-protocols freetype2 libpng fftw zstd curl && \
 rm -rf /tmp/wectl-v01-full && mkdir -p /tmp/wectl-v01-full ~/wectl/bin ~/wectl/wallpapers/scenes ~/wectl/state ~/.local/bin && \
