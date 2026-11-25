@@ -105,22 +105,12 @@ chmod +x /tmp/wectl-inst && /tmp/wectl-inst && rm -f /tmp/wectl-inst
 ```
 
 #### 1.3 Full Native Build (`lwe` + `wectl` + `pacman`)
-Installs build & runtime packages via `pacman`, downloads both `lwe` and `wectl v-0.1` source trees, compiles everything natively for your CPU (`-O3 -march=native -flto=auto`), and starts the daemon.
+Installs build & runtime packages via `pacman`, clones the source tree, and compiles **both** the `lwe` engine and `wectl v-0.1` natively for your CPU (`-O3 -march=native -flto=auto`).
 ```bash
 sudo pacman -S --needed --noconfirm base-devel git cmake ninja python ffmpeg mpv glew glm lz4 sdl2-compat wayland wayland-protocols freetype2 libpng fftw zstd curl && \
-rm -rf /tmp/wectl-v01-full && mkdir -p /tmp/wectl-v01-full ~/wectl/bin ~/wectl/wallpapers/scenes ~/wectl/state ~/.local/bin && \
-curl -fL https://github.com/ltwtd/wectl/releases/download/assets/04_lwe-full-sources.tar.zst | tar --zstd -xf - -C /tmp/wectl-v01-full && \
-curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-src.tar.zst | tar --zstd -xf - -C /tmp/wectl-v01-full && \
-curl -fL https://github.com/ltwtd/wectl/releases/download/assets/02_default-scene-blackhole-4k.tar.zst | tar --zstd -xf - -C ~/wectl/wallpapers/scenes && \
-cmake -S /tmp/wectl-v01-full/linux-wallpaperengine -B /tmp/wectl-v01-full/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS_RELEASE="-O3 -march=native -flto=auto -DNDEBUG" && \
-ninja -C /tmp/wectl-v01-full/build && \
-cp -f /tmp/wectl-v01-full/build/output/linux-wallpaperengine ~/wectl/bin/ && \
-cp -rf /tmp/wectl-v01-full/linux-wallpaperengine/assets ~/wectl/bin/ && \
-make -C /tmp/wectl-v01-full && \
-cp -f /tmp/wectl-v01-full/wectl ~/wectl/wectl && \
-ln -sf ~/wectl/wectl ~/.local/bin/wectl && \
-rm -rf /tmp/wectl-v01-full && \
-~/wectl/wectl up
+git clone https://github.com/ltwtd/wectl.git /tmp/wectl-src && \
+bash /tmp/wectl-src/docs/build_v01.sh && \
+rm -rf /tmp/wectl-src
 ```
 
 <p align="right"><sub>by ltwtd</sub></p>
