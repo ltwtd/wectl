@@ -591,7 +591,7 @@ add_dependencies(linux-wallpaperengine-lib glslang spirv-cross-core spirv-cross-
 add_executable(linux-wallpaperengine
     src/main.cpp)
 
-target_link_libraries (linux-wallpaperengine PUBLIC linux-wallpaperengine-lib)
+target_link_libraries (linux-wallpaperengine PUBLIC -Wl,--whole-archive linux-wallpaperengine-lib -Wl,--no-whole-archive)
 
 # Install the main executable and shared library via install(TARGETS)
 # so that CMake automatically strips/replaces the build-time RPATH.
