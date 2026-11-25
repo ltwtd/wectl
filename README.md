@@ -4,22 +4,16 @@
 
 ## Contents
 
-**`wectl Documentation`**<br>
-├── [**1. Installed Directory Layout**](#1-installed-directory-layout)<br>
-│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── `~/wectl/wectl` — CLI, TUI & Web Gallery daemon<br>
-│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── `~/wectl/bin/` — Custom NOCEF engine & base shaders<br>
-│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── `~/wectl/lib/` — Isolated runtime libraries<br>
-│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── `~/wectl/wallpapers/` — `scenes` / `vids` / `photos`<br>
-│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── `~/wectl/state/` — IPC sockets, PID locks & hardware profile<br>
-├── [**2. v-0.2 (Latest) — Installation**](#2-v-02-latest--installation)<br>
-│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── [**2.1 Prebuilt Binary + Verified Dependencies + Custom Engine**](#21-prebuilt-binary--pacman-dependencies--custom-engine)<br>
-│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── [**2.2 Compile `wectl` Natively + Verified Dependencies + Custom Engine**](#22-compile-wectl-natively--pacman-dependencies--custom-engine)<br>
-│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── [**2.3 Full Source Build — Engine, Dependencies & `wectl`**](#23-full-source-build--engine-dependencies--wectl)<br>
+**`wectl`**<br>
+├── [**1. Directory Layout**](#1-installed-directory-layout)<br>
+├── [**2. v-0.2 (Latest) — Install**](#2-v-02-latest--installation)<br>
+│&nbsp;&nbsp;&nbsp;&nbsp;├── [**2.1 Prebuilt Binary + Verified Deps**](#21-prebuilt-binary--pacman-dependencies--custom-engine)<br>
+│&nbsp;&nbsp;&nbsp;&nbsp;├── [**2.2 Compile `wectl` + Verified Deps**](#22-compile-wectl-natively--pacman-dependencies--custom-engine)<br>
+│&nbsp;&nbsp;&nbsp;&nbsp;└── [**2.3 Full Source Build (All Native)**](#23-full-source-build--engine-dependencies--wectl)<br>
 ├── [**3. Development Milestones**](#3-development-milestones)<br>
-│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── [**3.1 `v-0.1` — Pure C++20 Modular Client & Zero-GPU Daemon**](#31-v-01--pure-c20-modular-client--zero-gpu-daemon)<br>
-│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── [**3.2 `v-0.2` — Multi-Format Gallery, Seamless Switch & Ultra-Optimized Engine**](#32-v-02--multi-format-gallery-seamless-switch--ultra-optimized-engine)<br>
-└── [**4. Previous Versions**](#4-previous-versions)<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── [**4.1 `v-0.1` — Pure C++20 Modular Client (Hyprland)**](#1-v-01--pure-c20-modular-client-hyprland)
+│&nbsp;&nbsp;&nbsp;&nbsp;├── [**3.1 `v-0.1` — C++20 Core & Zero-GPU**](#31-v-01--pure-c20-modular-client--zero-gpu-daemon)<br>
+│&nbsp;&nbsp;&nbsp;&nbsp;└── [**3.2 `v-0.2` — Gallery & NOCEF Engine**](#32-v-02--multi-format-gallery-seamless-switch--ultra-optimized-engine)<br>
+└── [**4. Previous Versions (`v-0.1`)**](#4-previous-versions)
 ---
 
 ## 1. Installed Directory Layout
