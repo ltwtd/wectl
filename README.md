@@ -38,6 +38,8 @@ All installation modes deploy the exact same self-contained directory layout int
 
 ## 2. v-0.2 (Latest) — Installation
 
+> **Verified Dependency Matrix:** [`docs/COMPATIBILITY_v0.2.md`](https://github.com/ltwtd/wectl/blob/main/docs/COMPATIBILITY_v0.2.md)
+
 ### 2.1 Prebuilt Binary + `pacman` Dependencies + Custom Engine
 Installs runtime libraries via `pacman`, downloads the prebuilt `wectl` binary (`v-0.2`), and deploys the custom ultra-optimized `linux-wallpaperengine` bundle (`01_lwe-engine-native-full.tar.zst`) from `assets`.
 ```bash
@@ -79,6 +81,8 @@ rm -rf /tmp/wectl-src
 ---
 
 <h2 id="4-previous-versions" align="center">Previous Versions</h2>
+
+> **Verified Dependency Matrix:** [`docs/COMPATIBILITY_v0.1.md`](https://github.com/ltwtd/wectl/blob/main/docs/COMPATIBILITY_v0.1.md)
 
 ### 1. [`v-0.1`](https://github.com/ltwtd/wectl/releases/tag/v-0.1) — Pure C++20 Modular Client (Hyprland)
 
