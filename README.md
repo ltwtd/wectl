@@ -4,15 +4,24 @@
 
 ## Contents
 
-1. [Installed Directory Layout](#1-installed-directory-layout)
-2. [v-0.2 (Latest) — Installation](#2-v-02-latest--installation)
-   - [2.1 Prebuilt Binary + `pacman` Dependencies + Custom Engine](#21-prebuilt-binary--pacman-dependencies--custom-engine)
-   - [2.2 Compile `wectl` Natively + `pacman` Dependencies + Custom Engine](#22-compile-wectl-natively--pacman-dependencies--custom-engine)
-   - [2.3 Full Source Build — Engine, Dependencies & `wectl`](#23-full-source-build--engine-dependencies--wectl)
-3. [Development Milestones](#3-development-milestones)
-   - [3.1 `v-0.1` — Pure C++20 Modular Client & Zero-GPU Daemon](#31-v-01--pure-c20-modular-client--zero-gpu-daemon)
-   - [3.2 `v-0.2` — Multi-Format Gallery, Seamless Switch & Ultra-Optimized Engine](#32-v-02--multi-format-gallery-seamless-switch--ultra-optimized-engine)
-4. [Previous Versions (`v-0.1`)](#4-previous-versions)
+```text
+wectl Documentation
+├── 1. Installed Directory Layout
+│   ├── ~/wectl/wectl               (CLI, TUI & Web Gallery daemon)
+│   ├── ~/wectl/bin/                (Custom NOCEF engine & base shaders)
+│   ├── ~/wectl/lib/                (Isolated runtime libraries)
+│   ├── ~/wectl/wallpapers/         (scenes / vids / photos)
+│   └── ~/wectl/state/              (IPC sockets, PID locks & hardware profile)
+├── 2. v-0.2 (Latest) — Installation
+│   ├── 2.1 Prebuilt Binary + Verified Dependencies + Custom Engine
+│   ├── 2.2 Compile wectl Natively + Verified Dependencies + Custom Engine
+│   └── 2.3 Full Source Build — Engine, Dependencies & wectl
+├── 3. Development Milestones
+│   ├── 3.1 v-0.1 — Pure C++20 Modular Client & Zero-GPU Daemon
+│   └── 3.2 v-0.2 — Multi-Format Gallery, Seamless Switch & Ultra-Optimized Engine
+└── 4. Previous Versions
+    └── 4.1 v-0.1 (1.1 Prebuilt / 1.2 Native Client / 1.3 Full Source Build)
+```
 
 ---
 
