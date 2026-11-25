@@ -18,13 +18,13 @@ Ultra-lightweight, pure C++20 Wallpaper Engine manager and web gallery daemon fo
 ### Option 1: Prebuilt Binary Installer (Fastest)
 Downloads the precompiled native `x86_64` binary, engine, default 4K scene, and configures `systemd --user`:
 ```bash
-curl -fL https://github.com/ltwtd/wectl/releases/download/ltwtd/wectl/releases/download/v-0.2/wectl-installer-bin -o /tmp/wectl-inst && chmod +x /tmp/wectl-inst && /tmp/wectl-inst
+curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.2/wectl-installer-bin -o /tmp/wectl-inst && chmod +x /tmp/wectl-inst && /tmp/wectl-inst
 ```
 
 ### Option 2: Native Source-Compiling Installer (`-O3 -march=native -flto`)
 Fetches the 7 C++20 modules and compiles `wectl` directly on your machine with full CPU-specific optimizations:
 ```bash
-curl -fL https://github.com/ltwtd/wectl/releases/download/ltwtd/wectl/releases/download/v-0.2/wectl-installer-src -o /tmp/wectl-inst && chmod +x /tmp/wectl-inst && /tmp/wectl-inst
+curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.2/wectl-installer-src -o /tmp/wectl-inst && chmod +x /tmp/wectl-inst && /tmp/wectl-inst
 ```
 
 ---
@@ -64,10 +64,10 @@ Place your media into the corresponding subdirectories inside your installation 
 ### `v-0.1`
 #### Prebuilt Binary Installer (`v-0.1`)
 ```bash
-curl -fL https://github.com/ltwtd/wectl/releases/download/ltwtd/wectl/releases/download/v-0.1/wectl-installer-bin -o /tmp/wectl-inst && chmod +x /tmp/wectl-inst && /tmp/wectl-inst
+curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-installer-bin -o /tmp/wectl-inst && chmod +x /tmp/wectl-inst && /tmp/wectl-inst
 ```
 
 #### Source-Compiling Installer (`v-0.1`)
 ```bash
-curl -fL https://github.com/ltwtd/wectl/releases/download/ltwtd/wectl/releases/download/v-0.1/wectl-installer-src -o /tmp/wectl-inst && chmod +x /tmp/wectl-inst && /tmp/wectl-inst
+curl -fL https://github.com/ltwtd/wectl/releases/download/v-0.1/wectl-installer-src -o /tmp/wectl-inst && chmod +x /tmp/wectl-inst && /tmp/wectl-inst
 ```
