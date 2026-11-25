@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "FileSystem.h"
 #include "WallpaperEngine/Logging/Log.h"
 #include <climits>
@@ -53,6 +54,16 @@ std::filesystem::path Steam::FileSystem::workshopDirectory (int appID, const std
 }
 
 std::filesystem::path Steam::FileSystem::appDirectory (const std::string& appDirectory, const std::string& path) {
+    {
+        char exeBuf[4096] = {0};
+        ssize_t len = readlink("/proc/self/exe", exeBuf, sizeof(exeBuf) - 1);
+        if (len > 0) {
+            std::filesystem::path localAssets = std::filesystem::path(std::string(exeBuf, len)).parent_path() / path;
+            if (std::filesystem::exists(localAssets) && std::filesystem::is_directory(localAssets)) {
+                return localAssets;
+            }
+        }
+    }
     auto homepath = detectHomepath ();
 
     for (const auto& current : appDirectoryPaths) {

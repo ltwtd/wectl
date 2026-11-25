@@ -377,6 +377,7 @@ void TextureParser::parseSpritesheetMetadata (
 ) {
     try {
 	std::string texJsonContent = metadataLoader (filename + ".tex-json");
+	if (texJsonContent.empty ()) return;
 	nlohmann::json texJson = nlohmann::json::parse (texJsonContent);
 
 	// Check for spritesheet sequences
