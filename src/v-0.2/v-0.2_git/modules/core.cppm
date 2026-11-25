@@ -54,11 +54,15 @@ inline void relocate_self(bool verbose = true) {
     {
         std::ofstream unit(unit_dir / "wectl.service", std::ios::trunc);
         unit << "[Unit]\nDescription=Pure C++20 Wallpaper Engine Gallery Daemon (Hyprland)\n"
-             << "After=graphical-session.target\nStartLimitIntervalSec=0\n\n"
-             << "[Service]\nPassEnvironment=WAYLAND_DISPLAY XDG_RUNTIME_DIR HYPRLAND_INSTANCE_SIGNATURE\n"
+             << "After=default.target\nStartLimitIntervalSec=0\n\n"
+             << "[Service]\nType=simple\n"
+             << "WorkingDirectory=" << root.string() << "\n"
              << "Environment=\"PATH=" << (root / "bin").string() << ":" << local_bin.string() << ":/usr/local/bin:/usr/bin:/bin\"\n"
+             << "Environment=\"LD_LIBRARY_PATH=" << (root / "lib").string() << "\"\n"
+             << "Environment=\"XDG_SESSION_TYPE=wayland\"\n"
+             << "ExecStartPre=/bin/sh -c 'until [ -n \"$WAYLAND_DISPLAY\" ] || systemctl --user show-environment | grep -q \"WAYLAND_DISPLAY=\"; do sleep 0.2; done'\n"
              << "ExecStart=" << bin.string() << " daemon\n"
-             << "Restart=always\nRestartSec=1\n\n[Install]\nWantedBy=default.target\n";
+             << "Restart=on-failure\nRestartSec=1\n\n[Install]\nWantedBy=default.target\n";
     }
 
     std::system("systemctl --user import-environment WAYLAND_DISPLAY XDG_RUNTIME_DIR HYPRLAND_INSTANCE_SIGNATURE PATH >/dev/null 2>&1 || true");
