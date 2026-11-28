@@ -64,6 +64,40 @@ int main(int argc, char** argv) {
     } else if (cmd == "restore") {
         const std::string cur = read_file(state_dir() / "current", "scene:4K SCI-FI Black Hole");
         if (!cur.empty()) launch_wallpaper(cur);
+    } else if (cmd == "parallax") {
+        if (argc < 3) {
+            const bool on = (read_file(state_dir() / "parallax", "1") != "0");
+            std::cout << "Parallax: " << (on ? "on" : "off") << "\n";
+            return 0;
+        }
+        const std::string arg = *(argv + 2);
+        bool next_val = true;
+        if (arg == "off" || arg == "0" || arg == "false" || arg == "disable") {
+            next_val = false;
+        } else if (arg == "on" || arg == "1" || arg == "true" || arg == "enable") {
+            next_val = true;
+        } else if (arg == "toggle") {
+            next_val = (read_file(state_dir() / "parallax", "1") == "0");
+        } else {
+            std::cerr << "Usage: wectl parallax [on|off|toggle]\n";
+            return 1;
+        }
+        write_file(state_dir() / "parallax", next_val ? "1" : "0");
+        reload_current_wallpaper(true);
+        std::cout << "Parallax: " << (next_val ? "on" : "off") << "\n";
+    } else if (cmd == "scale") {
+        if (argc < 3) {
+            std::cout << "Scale: " << normalize_scale(read_file(state_dir() / "scale", "fill")) << "\n";
+            return 0;
+        }
+        const std::string arg = *(argv + 2);
+        if (arg != "fill" && arg != "fit" && arg != "stretch" && arg != "center") {
+            std::cerr << "Usage: wectl scale [fill|fit|stretch|center]\n";
+            return 1;
+        }
+        write_file(state_dir() / "scale", arg);
+        reload_current_wallpaper(false);
+        std::cout << "Scale: " << arg << "\n";
     } else if (cmd == "relink") {
         relocate_self(true);
     } else if (cmd == "uninstall") {

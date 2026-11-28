@@ -67,11 +67,15 @@ inline bool is_daemon_alive() {
 
 inline void print_status_block() {
     const auto& hw = load_hw();
+    const std::string cur_scale = normalize_scale(read_file(state_dir() / "scale", "fill"));
+    const bool cur_plx = (read_file(state_dir() / "parallax", "1") != "0");
+
     std::cout << "Root:    " << root_dir().string() << "\n"
-              << "Display: " << hw.monitor << " | " << hw.resolution << " | Max " << hw.max_hz << "Hz | fill\n"
+              << "Display: " << hw.monitor << " | " << hw.resolution << " | Max " << hw.max_hz << "Hz | " << cur_scale << "\n"
               << "Service: " << (is_daemon_alive() ? "\033[1;32mACTIVE\033[0m (http://127.0.0.1:43197)\n" : "\033[1;31mSTOPPED\033[0m\n")
               << "Media:   " << read_file(state_dir() / "current", "none") << "\n"
-              << "FPS:     " << clamp_fps(std::atoi(read_file(state_dir() / "fps", "60").c_str())) << " FPS\n";
+              << "Config:  " << clamp_fps(std::atoi(read_file(state_dir() / "fps", "60").c_str())) << " FPS | Scale: " << cur_scale
+              << " | Parallax: " << (cur_plx ? "\033[1;32mON\033[0m\n" : "\033[1;33mOFF\033[0m\n");
 
     const pid_t pid = find_renderer_pid();
     if (pid > 0) {
@@ -175,12 +179,17 @@ inline void menu_config_control() {
         const auto& hw = load_hw();
         const std::string cur_scn = read_file(state_dir() / "current", "none");
         const int cur_fps = clamp_fps(std::atoi(read_file(state_dir() / "fps", "60").c_str()));
+        const std::string cur_scale = normalize_scale(read_file(state_dir() / "scale", "fill"));
+        const bool cur_plx = (read_file(state_dir() / "parallax", "1") != "0");
 
         std::cout << "\033[1;35m┌────────────────────────────────────────────────────────┐\033[0m\n"
-                  << "\033[1;35m│\033[0m  Active: " << cur_scn << " (" << cur_fps << " FPS / max " << hw.max_hz << "Hz)\n"
+                  << "\033[1;35m│\033[0m  Active: " << cur_scn << "\n"
+                  << "\033[1;35m│\033[0m  Config: " << cur_fps << " FPS (max " << hw.max_hz << "Hz) | Scale: " << cur_scale
+                  << " | Parallax: " << (cur_plx ? "ON" : "OFF") << "\n"
                   << "\033[1;35m├────────────────────────────────────────────────────────┤\033[0m\n"
-                  << "\033[1;35m│\033[0m  1) Select Media (Scene/Vid/Pic)  3) Restore Last      \033[1;35m│\033[0m\n"
-                  << "\033[1;35m│\033[0m  2) Set Target FPS                0) Back              \033[1;35m│\033[0m\n"
+                  << "\033[1;35m│\033[0m  1) Select Media (Scene/Vid/Pic)  4) Toggle Parallax   \033[1;35m│\033[0m\n"
+                  << "\033[1;35m│\033[0m  2) Set Target FPS                5) Restore Last      \033[1;35m│\033[0m\n"
+                  << "\033[1;35m│\033[0m  3) Set Scaling Mode              0) Back              \033[1;35m│\033[0m\n"
                   << "\033[1;35m└────────────────────────────────────────────────────────┘\033[0m\n"
                   << "\nSelect action > " << std::flush;
 
@@ -218,6 +227,29 @@ inline void menu_config_control() {
             if (!cur_scn.empty() && cur_scn != "none") launch_wallpaper(cur_scn, f);
             std::cout << "Target FPS set to: " << f << "\n";
         } else if (ch == "3") {
+            std::cout << "  1) fill    (crop to fill screen)\n"
+                      << "  2) fit     (keep aspect, letterbox)\n"
+                      << "  3) stretch (ignore aspect ratio)\n"
+                      << "  4) center  (original 1:1 size)\n"
+                      << "\nSelect scale > " << std::flush;
+            const std::string s_in = read_line();
+            std::string next_scale;
+            if (s_in == "1" || s_in == "fill") next_scale = "fill";
+            else if (s_in == "2" || s_in == "fit") next_scale = "fit";
+            else if (s_in == "3" || s_in == "stretch") next_scale = "stretch";
+            else if (s_in == "4" || s_in == "center") next_scale = "center";
+
+            if (!next_scale.empty()) {
+                write_file(state_dir() / "scale", next_scale);
+                reload_current_wallpaper(false);
+                std::cout << "Scaling mode set to: " << next_scale << "\n";
+            }
+        } else if (ch == "4") {
+            const bool next_plx = !cur_plx;
+            write_file(state_dir() / "parallax", next_plx ? "1" : "0");
+            reload_current_wallpaper(true);
+            std::cout << "Parallax: " << (next_plx ? "ON" : "OFF") << "\n";
+        } else if (ch == "5") {
             const std::string last = read_file(state_dir() / "current", "scene:4K SCI-FI Black Hole");
             if (!last.empty()) {
                 launch_wallpaper(last);
@@ -233,18 +265,20 @@ inline void run_interactive_hub() {
         clear_screen();
         print_logo();
         std::cout << "\033[1;36m┌────────────────────────────────────────────────────────┐\033[0m\n"
-        << "\033[1;36m│\033[0m  1) App Control     (Up, Status, Freeze, Down, Remove) \033[1;36m│\033[0m\n"
-        << "\033[1;36m│\033[0m  2) Config & Media  (Scenes, Videos, Photos, FPS)      \033[1;36m│\033[0m\n"
-        << "\033[1;36m│\033[0m  0) Exit                                               \033[1;36m│\033[0m\n"
-        << "\033[1;36m└────────────────────────────────────────────────────────┘\033[0m\n"
-        << "\nSelect module > " << std::flush;
+                  << "\033[1;36m│\033[0m  1) App Control     (Up, Status, Freeze, Down, Remove) \033[1;36m│\033[0m\n"
+                  << "\033[1;36m│\033[0m  2) Config & Media  (Media, FPS, Scale, Parallax)      \033[1;36m│\033[0m\n"
+                  << "\033[1;36m│\033[0m  0) Exit                                               \033[1;36m│\033[0m\n"
+                  << "\033[1;36m└────────────────────────────────────────────────────────┘\033[0m\n"
+                  << "\nSelect module > " << std::flush;
         const std::string ch = read_line();
         if (ch == "1") menu_app_control();
         else if (ch == "2") menu_config_control();
         else if (ch == "0" || ch.empty()) {
             clear_screen();
             return;
-            }
         }
     }
 }
+
+}
+

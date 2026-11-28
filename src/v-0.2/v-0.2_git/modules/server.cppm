@@ -196,6 +196,16 @@ inline void handle_client(int cli) {
         const std::string f = query_param(query, "v");
         if (!f.empty()) write_file(state_dir() / "fps", std::to_string(clamp_fps(std::atoi(f.c_str()))));
         send_ok(cli);
+    } else if (path == "/scale") {
+        const std::string v = normalize_scale(query_param(query, "v"));
+        write_file(state_dir() / "scale", v);
+        reload_current_wallpaper(false);
+        send_ok(cli);
+    } else if (path == "/parallax") {
+        const std::string v = query_param(query, "v");
+        write_file(state_dir() / "parallax", (v == "0") ? "0" : "1");
+        reload_current_wallpaper(true);
+        send_ok(cli);
     } else if (path == "/hide") {
         const std::string s = query_param(query, "s");
         const ResolvedTarget t = resolve_media(s);
@@ -269,7 +279,6 @@ inline void run_daemon() {
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     addr.sin_port = htons(43197);
-
     if (bind(srv, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) < 0) return;
     listen(srv, 32);
 

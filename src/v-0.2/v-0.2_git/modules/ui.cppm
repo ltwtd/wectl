@@ -15,10 +15,12 @@ module;
 
 export module wectl.ui;
 import wectl.core;
+import wectl.render;
 
 export namespace wectl::ui {
 namespace fs = std::filesystem;
 using namespace wectl::core;
+using namespace wectl::render;
 
 struct GalleryItem {
     std::string id;
@@ -172,10 +174,12 @@ inline std::pair<std::string, bool> find_scene_thumb(const fs::path& dir) {
     return {{}, false};
 }
 
-
 inline std::string render_gallery() {
     const int max_hz = load_hw().max_hz;
     const int cur_fps = clamp_fps(std::atoi(read_file(state_dir() / "fps", "60").c_str()));
+    const std::string cur_scale = normalize_scale(read_file(state_dir() / "scale", "fill"));
+    const bool cur_parallax = (read_file(state_dir() / "parallax", "1") != "0");
+
     std::string cur_id = read_file(state_dir() / "current", "");
     if (!cur_id.empty() && cur_id.find(':') == std::string::npos) cur_id = "scene:" + cur_id;
 
@@ -220,17 +224,27 @@ inline std::string render_gallery() {
     const std::string max_s = std::to_string(max_hz);
     const std::string cur_s = std::to_string(cur_fps);
 
+    auto sbtn = [&](const std::string& id, const std::string& label) {
+        return "<button class='sbtn" + std::string(cur_scale == id ? " on" : "") +
+               "' data-scale='" + id + "' onclick=\"setScale('" + id + "')\">" + label + "</button>";
+    };
+
     std::string h;
-    h.reserve(5400 + items.size() * 380);
+    h.reserve(6400 + items.size() * 380);
     h += "<!doctype html><html><head><meta charset='utf-8'><title>wectl</title>"
          "<style>*{box-sizing:border-box}body{margin:0;background:#0d1117;color:#e6edf3;font-family:system-ui,-apple-system,sans-serif}"
          ".bar{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;padding:12px 20px;background:rgba(22,27,34,.92);backdrop-filter:blur(10px);border-bottom:1px solid #30363d}"
-         ".left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}"
+         ".left,.ctrl-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}"
          ".search{width:210px;background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:10px;padding:7px 12px;font-size:13px;outline:none;transition:.15s}"
          ".search:focus{border-color:#58a6ff;box-shadow:0 0 0 3px rgba(88,166,255,.15)}"
-         ".tabs{display:flex;background:#0d1117;border:1px solid #30363d;border-radius:10px;padding:3px;gap:3px}"
-         ".tab{background:transparent;color:#8b949e;border:none;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}"
+         ".tabs,.seg{display:flex;background:#0d1117;border:1px solid #30363d;border-radius:10px;padding:3px;gap:3px}"
+         ".tab,.sbtn{background:transparent;color:#8b949e;border:none;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}"
+         ".tab:hover,.sbtn:hover{color:#e6edf3}"
          ".tab.on{background:#21262d;color:#e6edf3}"
+         ".sbtn.on{background:#21262d;color:#58a6ff}"
+         ".pbtn{background:#0d1117;color:#8b949e;border:1px solid #30363d;border-radius:10px;padding:7px 12px;font-size:12px;font-weight:600;cursor:pointer;transition:.15s}"
+         ".pbtn:hover{border-color:#58a6ff;color:#e6edf3}"
+         ".pbtn.on{background:rgba(56,139,253,.15);color:#58a6ff;border-color:#58a6ff}"
          ".fps-pill{display:flex;align-items:center;gap:10px;background:#0d1117;border:1px solid #30363d;border-radius:10px;padding:5px 12px}"
          ".fps-lbl{font-size:11px;font-weight:600;color:#8b949e}"
          "input[type=range]{-webkit-appearance:none;appearance:none;width:105px;height:4px;border-radius:99px;background:#30363d;outline:none;cursor:pointer}"
@@ -256,10 +270,16 @@ inline std::string render_gallery() {
          "<button class='tab' data-k='scene' onclick='setTab(\"scene\")'>Scenes</button>"
          "<button class='tab' data-k='video' onclick='setTab(\"video\")'>Videos</button>"
          "<button class='tab' data-k='photo' onclick='setTab(\"photo\")'>Photos</button>"
-         "</div></div><div class='fps-pill'><span class='fps-lbl'>FPS</span>"
+         "</div></div><div class='ctrl-row'>"
+         "<button id='plxBtn' class='pbtn" + std::string(cur_parallax ? " on" : "") + "' onclick='togglePlx()'>Parallax: " +
+         std::string(cur_parallax ? "ON" : "OFF") + "</button>"
+         "<div class='seg'>" +
+         sbtn("fill", "Fill") + sbtn("fit", "Fit") + sbtn("stretch", "Stretch") + sbtn("center", "Center") +
+         "</div>"
+         "<div class='fps-pill'><span class='fps-lbl'>FPS</span>"
          "<input id='fpsBar' type='range' min='15' max='" + max_s + "' value='" + cur_s + "' oninput='syncNum(this.value)' onchange='applyFps(this.value)'>"
          "<input id='fpsNum' class='fps-num' type='number' min='15' max='" + max_s + "' value='" + cur_s + "' oninput='syncBar(this.value)' onchange='applyFps(this.value)'>"
-         "</div></div><div class='grid'>";
+         "</div></div></div><div class='grid'>";
 
     for (const auto& it : items) {
         h += "<div class='c";
@@ -276,7 +296,7 @@ inline std::string render_gallery() {
             append_html_esc(h, it.res);
             h += "</span>";
         }
-        h += "<button class='del' title='Hide to *_hidden' onclick='rm(event,this.parentElement)'>✕</button><div class='th'>";
+        h += "<button class='del' title='Hide to *_hidden' onclick='rm(event,this.parentElement)'>&#10005;</button><div class='th'>";
         if (it.thumb.empty()) {
             h += "No preview";
         } else {
@@ -295,16 +315,21 @@ inline std::string render_gallery() {
 
     h += "</div><div id='msg'></div><" "script>let cur='";
     append_json_esc(h, cur_id);
-    h += "';const modes=['scene','video','photo'];const labels={'scene':'Scenes','video':'Videos','photo':'Photos'};let tab='" + init_tab + "';const maxHz=" + max_s + ";"
+    h += "';let tab='" + init_tab + "';const maxHz=" + max_s + ";"
+         "let plx=document.getElementById('plxBtn').classList.contains('on');"
          "const bar=document.getElementById('fpsBar'),num=document.getElementById('fpsNum');"
          "function paintBar(v){let p=((v-15)/(maxHz-15))*100;bar.style.background='linear-gradient(90deg,#58a6ff '+p+'%,#30363d '+p+'%)';}"
          "paintBar(bar.value);function clamp(v){v=parseInt(v)||60;return Math.max(15,Math.min(maxHz,v));}"
          "function syncNum(v){num.value=v;paintBar(v);}function syncBar(v){if(!v)return;let c=clamp(v);bar.value=c;paintBar(c);}"
          "function toast(t){let m=document.getElementById('msg');m.textContent=t;m.style.display='block';setTimeout(()=>m.style.display='none',1800);}"
-         "function setTab(k){tab=k;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.k===k));flt();}"
-         ""
+         "function setTab(k){tab=k;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.k===k));"
+         "document.getElementById('plxBtn').style.display=(k==='scene')?'':'none';flt();}"
          "function flt(){let q=document.getElementById('q').value.toLowerCase();document.querySelectorAll('.c').forEach(x=>{let ok=(x.dataset.k===tab)&&x.dataset.n.toLowerCase().includes(q);x.style.display=ok?'':'none';});}"
          "setTab(tab);"
+         "async function togglePlx(){plx=!plx;const b=document.getElementById('plxBtn');b.classList.toggle('on',plx);"
+         "b.textContent='Parallax: '+(plx?'ON':'OFF');await fetch('/parallax?v='+(plx?'1':'0'));toast('Parallax: '+(plx?'ON':'OFF'));}"
+         "async function setScale(v){document.querySelectorAll('.sbtn').forEach(b=>b.classList.toggle('on',b.dataset.scale===v));"
+         "await fetch('/scale?v='+encodeURIComponent(v));toast('Scale: '+v.toUpperCase());}"
          "async function applyFps(v){let c=clamp(v);bar.value=c;num.value=c;paintBar(c);if(cur)await runWp(cur,cur.split(':').slice(1).join(':'));else{await fetch('/fps?v='+c);toast('FPS: '+c);}}"
          "async function runWp(id,n){cur=id;let f=clamp(num.value);document.querySelectorAll('.c').forEach(x=>x.classList.toggle('act',x.dataset.id===id));await fetch('/set?s='+encodeURIComponent(id)+'&fps='+f);toast(n+' • '+f+' FPS');}"
          "async function rm(e,el){e.stopPropagation();await fetch('/hide?s='+encodeURIComponent(el.dataset.id));el.remove();}"

@@ -55,6 +55,11 @@ inline bool is_photo_ext(std::string_view ext) {
     return ext == ".jpg" || ext == ".jpeg" || ext == ".png" || ext == ".webp" || ext == ".jxl" || ext == ".bmp";
 }
 
+inline std::string normalize_scale(std::string_view s) {
+    if (s == "fit" || s == "stretch" || s == "center") return std::string(s);
+    return "fill";
+}
+
 inline std::string find_tool_bin(const char* name) {
     std::error_code ec;
     const fs::path local = root_dir() / "bin" / name;
@@ -155,7 +160,6 @@ inline void stop_all_services() {
     kill_renderer();
     std::system("systemctl --user stop wectl.service >/dev/null 2>&1 || true");
 }
-
 inline ResolvedTarget resolve_media(std::string_view input) {
     if (input.empty()) return {};
     std::error_code ec;
@@ -195,7 +199,7 @@ inline ResolvedTarget resolve_media(std::string_view input) {
     return {};
 }
 
-inline pid_t spawn_media_process(const ResolvedTarget& t, int fps) {
+inline pid_t spawn_media_process(const ResolvedTarget& t, int fps, const std::string& scale, bool parallax) {
     std::string mon_str = load_hw().monitor;
     const std::string jmon = query_socket("j/monitors");
     if (!jmon.empty() && jmon.find("\"" + mon_str + "\"") == std::string::npos) {
@@ -224,20 +228,32 @@ inline pid_t spawn_media_process(const ResolvedTarget& t, int fps) {
 
         if (t.kind == MediaKind::Scene) {
             const std::string bin_str = find_tool_bin("linux-wallpaperengine");
-            std::array<const char*, 12> argv = {
-                bin_str.c_str(),
-                "--screen-root", mon_str.c_str(),
-                "--fps", fps_str.c_str(),
-                "--scaling", "fill",
-                "--silent",
-                "--no-fullscreen-pause",
-                path_str.c_str(),
-                nullptr
-            };
+            const std::string we_scale = (scale == "center") ? "default" : scale;
+            std::array<const char*, 13> argv{};
+            size_t idx = 0;
+            argv[idx++] = bin_str.c_str();
+            argv[idx++] = "--screen-root";
+            argv[idx++] = mon_str.c_str();
+            argv[idx++] = "--fps";
+            argv[idx++] = fps_str.c_str();
+            argv[idx++] = "--scaling";
+            argv[idx++] = we_scale.c_str();
+            argv[idx++] = "--silent";
+            argv[idx++] = "--no-fullscreen-pause";
+            if (!parallax) {
+                argv[idx++] = "--disable-parallax";
+            }
+            argv[idx++] = path_str.c_str();
+            argv[idx] = nullptr;
             execvp(bin_str.c_str(), const_cast<char* const*>(argv.data()));
         } else if (t.kind == MediaKind::Video) {
             const std::string bin_str = find_tool_bin("mpvpaper");
-            const std::string mpv_opts = "hwdec=auto-safe no-audio loop-file=inf panscan=1.0 video-sync=display-resample";
+            std::string scale_opt = "panscan=1.0";
+            if (scale == "fit") scale_opt = "panscan=0.0";
+            else if (scale == "stretch") scale_opt = "keepaspect=no";
+            else if (scale == "center") scale_opt = "video-unscaled=yes";
+
+            const std::string mpv_opts = "hwdec=auto-safe no-audio loop-file=inf video-sync=display-resample " + scale_opt;
             std::array<const char*, 6> argv = {
                 bin_str.c_str(),
                 "-o", mpv_opts.c_str(),
@@ -251,7 +267,7 @@ inline pid_t spawn_media_process(const ResolvedTarget& t, int fps) {
             std::array<const char*, 6> argv = {
                 bin_str.c_str(),
                 "-i", path_str.c_str(),
-                "-m", "fill",
+                "-m", scale.c_str(),
                 nullptr
             };
             execvp(bin_str.c_str(), const_cast<char* const*>(argv.data()));
@@ -270,10 +286,13 @@ inline void launch_wallpaper_unlocked(std::string_view input, int fps_in = -1, b
     const std::string prev_id = read_file(state_dir() / "current", "");
     const int raw_fps = (fps_in > 0) ? fps_in : std::atoi(read_file(state_dir() / "fps", "60").c_str());
     const int fps = clamp_fps(raw_fps);
+    const std::string scale = normalize_scale(read_file(state_dir() / "scale", "fill"));
+    const bool parallax = (read_file(state_dir() / "parallax", "1") != "0");
 
     write_file(state_dir() / "current", t.id);
     write_file(state_dir() / "fps", std::to_string(fps));
-    write_file(state_dir() / "scale", "fill");
+    write_file(state_dir() / "scale", scale);
+    write_file(state_dir() / "parallax", parallax ? "1" : "0");
 
     const pid_t old_pid = find_renderer_pid();
     const MediaKind old_kind = g_kind.load(std::memory_order_acquire);
@@ -290,7 +309,7 @@ inline void launch_wallpaper_unlocked(std::string_view input, int fps_in = -1, b
         }
     }
 
-    const pid_t new_pid = spawn_media_process(t, fps);
+    const pid_t new_pid = spawn_media_process(t, fps, scale, parallax);
     if (new_pid > 0) {
         g_pid.store(new_pid, std::memory_order_release);
         g_kind.store(t.kind, std::memory_order_release);
@@ -310,10 +329,17 @@ inline void launch_wallpaper_unlocked(std::string_view input, int fps_in = -1, b
         }
     }
 }
-
 inline void launch_wallpaper(std::string_view input, int fps_in) {
     std::lock_guard<std::mutex> lock(g_render_mtx);
     launch_wallpaper_unlocked(input, fps_in, true);
+}
+
+inline void reload_current_wallpaper(bool only_scene = false) {
+    const std::string cur = read_file(state_dir() / "current", "");
+    if (cur.empty()) return;
+    if (only_scene && cur.rfind("scene:", 0) != 0) return;
+    std::lock_guard<std::mutex> lock(g_render_mtx);
+    launch_wallpaper_unlocked(cur, -1, false);
 }
 
 inline void sync_fullscreen_state(bool fs_active) {
@@ -389,6 +415,7 @@ inline void start_autopause_worker() {
         }
     }).detach();
 }
+
 inline bool is_renderer_frozen(pid_t pid) {
     if (pid <= 0) return false;
     std::array<char, 64> stat_path{};
